@@ -1,5 +1,5 @@
-// LinuxDo to Obsidian - Content Script V3.5.6
-// 劫持书签按钮，保存帖子+评论到Obsidian（保留颜色样式）
+// LinuxDo to Obsidian - Content Script V3.5.7
+// 劫持链接按钮，保存帖子+评论到Obsidian（保留颜色样式）
 // V3.5: 支持同时保存到飞书多维表格（带MD附件）
 // V3.5.1: 单击保存到Obsidian，双击触发L站原生收藏
 // V3.5.2: 支持飞书国内版和Lark国际版
@@ -7,11 +7,12 @@
 // V3.5.4: 修复双击检测竞态条件 + 改进原生收藏触发机制
 // V3.5.5: 修复飞书记录重复问题（搜索逻辑改进）
 // V3.5.6: 保存时间改为北京时间格式
+// V3.5.7: 改为劫持链接按钮（原书签按钮改为链接按钮）
 //
 // 功能说明：
-// - 点击主帖书签：保存主帖（如开启"保存评论"则包含所有评论）
-// - 点击评论书签：保存主帖+该条评论（文件名带楼层号，不受"保存评论"设置影响）
-// - 双击同一书签：触发原生L站收藏功能（必须是同一个按钮）
+// - 点击主帖链接按钮：保存主帖（如开启"保存评论"则包含所有评论）
+// - 点击评论链接按钮：保存主帖+该条评论（文件名带楼层号，不受"保存评论"设置影响）
+// - 双击同一链接按钮：触发原生复制链接功能（必须是同一个按钮）
 
 (function() {
   'use strict';
@@ -46,31 +47,41 @@
     return document.querySelector('#topic-title h1') !== null;
   }
 
-  // 判断是否为帖子/评论区域的书签按钮，返回 { isBookmark: boolean, postNumber: string|null }
-  function isBookmarkButton(element) {
-    if (!element) return { isBookmark: false, postNumber: null };
+  // 判断是否为帖子/评论区域的链接按钮，返回 { isLink: boolean, postNumber: string|null }
+  // V3.5.7: 改为检测链接按钮（原书签按钮）
+  function isLinkButton(element) {
+    if (!element) return { isLink: false, postNumber: null };
 
-    // 先检查元素特征是否像书签按钮
+    // 先检查元素特征是否像链接按钮
     const text = element.textContent || '';
     const className = element.className || '';
     const dataValue = element.getAttribute('data-value') || '';
     const title = element.title || '';
     const ariaLabel = element.getAttribute('aria-label') || '';
 
-    const isBookmarkLike = className.includes('bookmark') ||
-           dataValue === 'bookmark' ||
-           text.includes('书签') ||
-           text.includes('Bookmark') ||
-           text.toLowerCase().includes('bookmark') ||
-           title.toLowerCase().includes('bookmark') ||
-           ariaLabel.toLowerCase().includes('bookmark');
+    // 链接按钮的特征：share、link、链接等
+    const isLinkLike = className.includes('share') ||
+           className.includes('link') ||
+           dataValue === 'share' ||
+           dataValue === 'link' ||
+           text.includes('链接') ||
+           text.includes('Link') ||
+           text.includes('Share') ||
+           text.toLowerCase().includes('share') ||
+           text.toLowerCase().includes('link') ||
+           title.toLowerCase().includes('share') ||
+           title.toLowerCase().includes('link') ||
+           title.includes('链接') ||
+           ariaLabel.toLowerCase().includes('share') ||
+           ariaLabel.toLowerCase().includes('link') ||
+           ariaLabel.includes('链接');
 
-    // 如果不像书签按钮，直接返回 false
-    if (!isBookmarkLike) {
-      return { isBookmark: false, postNumber: null };
+    // 如果不像链接按钮，直接返回 false
+    if (!isLinkLike) {
+      return { isLink: false, postNumber: null };
     }
 
-    // 排除导航栏、用户中心等区域的书签链接
+    // 排除导航栏、用户中心等区域的链接
     const excludeAreas = [
       '.d-header',           // 顶部导航栏
       '.user-main',          // 用户中心主区域
@@ -85,21 +96,21 @@
 
     for (const selector of excludeAreas) {
       if (element.closest(selector)) {
-        console.log('[LinuxDo→Obsidian] 书签按钮在排除区域内:', selector);
-        return { isBookmark: false, postNumber: null };
+        console.log('[LinuxDo→Obsidian] 链接按钮在排除区域内:', selector);
+        return { isLink: false, postNumber: null };
       }
     }
 
-    // 检查是否是 URL 导航链接（href 包含 /bookmarks 或 /u/xxx/activity）
+    // 检查是否是 URL 导航链接（href 包含特定路径）
     const href = element.getAttribute('href') || '';
     if (href.includes('/bookmarks') || href.includes('/activity') || href.includes('/u/')) {
       console.log('[LinuxDo→Obsidian] 排除导航链接:', href);
-      return { isBookmark: false, postNumber: null };
+      return { isLink: false, postNumber: null };
     }
 
     // 必须在帖子页面上
     if (!isTopicPage()) {
-      return { isBookmark: false, postNumber: null };
+      return { isLink: false, postNumber: null };
     }
 
     // 检查是在主帖还是评论区
@@ -111,21 +122,22 @@
                    '1';
     }
 
-    console.log('[LinuxDo→Obsidian] 检测到书签按钮，楼层:', postNumber);
-    return { isBookmark: true, postNumber: postNumber };
+    console.log('[LinuxDo→Obsidian] 检测到链接按钮，楼层:', postNumber);
+    return { isLink: true, postNumber: postNumber };
   }
 
-  // 劫持书签按钮点击事件
-  // V3.5.1: 单击保存到Obsidian，双击触发原生收藏
-  // V3.5.3: 支持评论区书签按钮，点击评论书签保存主帖+该评论
+  // 劫持链接按钮点击事件
+  // V3.5.1: 单击保存到Obsidian，双击触发原生功能
+  // V3.5.3: 支持评论区按钮，点击评论按钮保存主帖+该评论
   // V3.5.3.1: 修复双击检测竞态条件 - 必须是同一个按钮才算双击
-  let bookmarkClickCount = 0;
-  let bookmarkClickTimer = null;
-  let lastBookmarkTarget = null;
-  let lastBookmarkPostNumber = null; // 记录点击的楼层号
+  // V3.5.7: 改为劫持链接按钮，双击触发原生复制链接
+  let linkClickCount = 0;
+  let linkClickTimer = null;
+  let lastLinkTarget = null;
+  let lastLinkPostNumber = null; // 记录点击的楼层号
   let eventListenerAdded = false; // 防止重复添加事件监听器
 
-  function hijackBookmarkButton() {
+  function hijackLinkButton() {
     // 防止重复添加事件监听器
     if (eventListenerAdded) {
       console.log('[LinuxDo→Obsidian] 事件监听器已存在，跳过添加');
@@ -136,63 +148,63 @@
     document.addEventListener('click', (e) => {
       const target = e.target.closest('button, a');
 
-      // V3.5.3.1: 检查是否有bypass标记（用于触发原生收藏）
+      // V3.5.3.1: 检查是否有bypass标记（用于触发原生复制链接）
       if (target?.hasAttribute('data-linuxdo-obsidian-bypass')) {
         console.log('[LinuxDo→Obsidian] 检测到bypass标记，放行原生点击');
         return; // 不拦截，让原生事件通过
       }
 
-      const bookmarkResult = isBookmarkButton(target);
+      const linkResult = isLinkButton(target);
 
-      if (target && bookmarkResult.isBookmark) {
+      if (target && linkResult.isLink) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
 
         // V3.5.3.1: 检查是否点击的是同一个按钮（通过楼层号判断）
-        const isSameButton = lastBookmarkPostNumber === bookmarkResult.postNumber;
+        const isSameButton = lastLinkPostNumber === linkResult.postNumber;
 
         if (isSameButton) {
-          bookmarkClickCount++;
+          linkClickCount++;
         } else {
-          // 点击了不同的书签按钮，重置计数
-          if (bookmarkClickTimer) {
-            clearTimeout(bookmarkClickTimer);
-            bookmarkClickTimer = null;
+          // 点击了不同的链接按钮，重置计数
+          if (linkClickTimer) {
+            clearTimeout(linkClickTimer);
+            linkClickTimer = null;
           }
-          bookmarkClickCount = 1;
+          linkClickCount = 1;
         }
 
-        lastBookmarkTarget = target;
-        lastBookmarkPostNumber = bookmarkResult.postNumber;
+        lastLinkTarget = target;
+        lastLinkPostNumber = linkResult.postNumber;
 
         // 清除之前的定时器
-        if (bookmarkClickTimer) {
-          clearTimeout(bookmarkClickTimer);
+        if (linkClickTimer) {
+          clearTimeout(linkClickTimer);
         }
 
-        if (bookmarkClickCount === 2 && isSameButton) {
-          // 双击同一个按钮：触发原生收藏
-          console.log('[LinuxDo→Obsidian] 双击检测，触发原生收藏，楼层:', bookmarkResult.postNumber);
-          bookmarkClickCount = 0;
-          lastBookmarkPostNumber = null;
-          triggerOriginalBookmark(target);
+        if (linkClickCount === 2 && isSameButton) {
+          // 双击同一个按钮：触发原生复制链接
+          console.log('[LinuxDo→Obsidian] 双击检测，触发原生复制链接，楼层:', linkResult.postNumber);
+          linkClickCount = 0;
+          lastLinkPostNumber = null;
+          triggerOriginalCopyLink(target);
         } else {
           // 等待300ms判断是否为双击
-          const postNumber = bookmarkResult.postNumber;
-          bookmarkClickTimer = setTimeout(() => {
-            if (bookmarkClickCount === 1) {
+          const postNumber = linkResult.postNumber;
+          linkClickTimer = setTimeout(() => {
+            if (linkClickCount === 1) {
               // 单击：保存到Obsidian
               if (postNumber === '1') {
-                console.log('[LinuxDo→Obsidian] 单击主帖书签，保存整个帖子');
+                console.log('[LinuxDo→Obsidian] 单击主帖链接按钮，保存整个帖子');
                 saveToObsidian(null); // 主帖：按原逻辑保存
               } else {
-                console.log('[LinuxDo→Obsidian] 单击评论书签，保存主帖+第' + postNumber + '楼评论');
+                console.log('[LinuxDo→Obsidian] 单击评论链接按钮，保存主帖+第' + postNumber + '楼评论');
                 saveToObsidian(postNumber); // 评论：保存主帖+该评论
               }
             }
-            bookmarkClickCount = 0;
-            lastBookmarkPostNumber = null;
+            linkClickCount = 0;
+            lastLinkPostNumber = null;
           }, 300);
         }
 
@@ -200,58 +212,53 @@
       }
     }, true);
 
-    console.log('[LinuxDo→Obsidian] 书签按钮劫持已激活 (V3.5.3 - 支持评论书签)');
+    console.log('[LinuxDo→Obsidian] 链接按钮劫持已激活 (V3.5.7 - 支持评论链接按钮)');
   }
 
-  // 触发原生收藏功能
-  // V3.5.3.1: 改进实现，使用模拟原生事件而非克隆节点
-  function triggerOriginalBookmark(target) {
-    // 方法1: 尝试找到并直接调用Discourse的书签API
-    // LinuxDo基于Discourse，书签操作通常通过 data-post-id 属性标识
+  // V3.5.7: 触发原生复制链接功能
+  function triggerOriginalCopyLink(target) {
+    // 方法1: 直接复制当前帖子/评论的链接到剪贴板
     const postContainer = target.closest('.topic-post, article[data-post-id]');
-    const postId = postContainer?.getAttribute('data-post-id');
+    const postNumber = postContainer?.getAttribute('data-post-number') || '1';
 
-    if (postId) {
-      // 尝试通过Discourse API添加书签
-      console.log('[LinuxDo→Obsidian] 尝试通过API添加书签，post_id:', postId);
+    // 构建链接URL
+    let linkUrl = window.location.href;
 
-      fetch('/bookmarks.json', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
-        },
-        body: JSON.stringify({
-          bookmarkable_id: postId,
-          bookmarkable_type: 'Post'
-        })
-      })
-      .then(response => {
-        if (response.ok) {
-          showNotification('已添加到L站收藏', 'success');
-          // 更新按钮视觉状态
-          target.classList.add('bookmarked');
-        } else if (response.status === 422) {
-          // 可能已经收藏过了
-          showNotification('该内容已在收藏中', 'info');
+    // 清理URL（移除查询参数和锚点）
+    linkUrl = linkUrl.replace(/#.*$/, '').replace(/\?.*$/, '');
+
+    // 如果是评论，添加楼层号
+    if (postNumber !== '1') {
+      // 检查URL是否已经有楼层号，如果有则替换
+      const match = linkUrl.match(/^(.*\/t\/[^/]+\/\d+)(\/\d+)?$/);
+      if (match) {
+        linkUrl = match[1] + '/' + postNumber;
+      } else {
+        linkUrl = linkUrl + '/' + postNumber;
+      }
+    }
+
+    console.log('[LinuxDo→Obsidian] 复制链接:', linkUrl);
+
+    // 使用 Clipboard API 复制
+    navigator.clipboard.writeText(linkUrl)
+      .then(() => {
+        if (postNumber === '1') {
+          showNotification('已复制帖子链接', 'success');
         } else {
-          throw new Error(`HTTP ${response.status}`);
+          showNotification(`已复制${postNumber}楼链接`, 'success');
         }
       })
       .catch(err => {
-        console.error('[LinuxDo→Obsidian] API书签失败:', err);
-        // 方法2: 回退到模拟点击
-        fallbackTriggerBookmark(target);
+        console.error('[LinuxDo→Obsidian] 剪贴板复制失败:', err);
+        // 回退方法：触发原生点击
+        fallbackTriggerCopyLink(target);
       });
-    } else {
-      // 找不到post_id，使用回退方法
-      fallbackTriggerBookmark(target);
-    }
   }
 
   // 回退方法：临时禁用插件拦截，触发原生点击
-  function fallbackTriggerBookmark(target) {
-    console.log('[LinuxDo→Obsidian] 使用回退方法触发原生书签');
+  function fallbackTriggerCopyLink(target) {
+    console.log('[LinuxDo→Obsidian] 使用回退方法触发原生复制链接');
 
     // 临时标记，让下一次点击通过
     target.setAttribute('data-linuxdo-obsidian-bypass', 'true');
@@ -269,7 +276,7 @@
       target.removeAttribute('data-linuxdo-obsidian-bypass');
     }, 100);
 
-    showNotification('已触发L站收藏', 'success');
+    showNotification('已触发复制链接', 'success');
   }
 
   // 提取帖子内容
@@ -1155,12 +1162,12 @@
     }
 
     // 初始化事件监听器（只添加一次）
-    hijackBookmarkButton();
+    hijackLinkButton();
     setupKeyboardShortcut();
 
     pluginInitialized = true;
     currentTopicUrl = topicUrl;
-    console.log('[LinuxDo→Obsidian] 插件已加载 (V3.5.6 - 北京时间格式)');
+    console.log('[LinuxDo→Obsidian] 插件已加载 (V3.5.7 - 劫持链接按钮)');
   }
 
   // 页面加载完成后初始化
