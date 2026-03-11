@@ -50,7 +50,7 @@
 
   // 判断是否为帖子/评论区域的链接按钮，返回 { isLink: boolean, postNumber: string|null }
   // V3.5.7: 改为检测链接按钮（原书签按钮）
-  // V3.5.8: 修复误触发问题 - 增加严格的区域检测
+  // V3.5.8: 修复误触发问题 - 只检测 data-value="share" 的按钮
   function isLinkButton(element) {
     if (!element) return { isLink: false, postNumber: null };
 
@@ -59,93 +59,25 @@
       return { isLink: false, postNumber: null };
     }
 
-    // V3.5.7.1: 首先检查是否在帖子操作菜单区域内（严格检测）
-    // Discourse 的帖子操作按钮在这些区域内
-    const postMenuAreas = [
-      '.post-controls',      // 帖子控制区
-      '.post-menu-area',     // 帖子菜单区
-      '.post-actions',       // 帖子操作区
-      '.widget-button',      // 小部件按钮
-      '.more-actions',       // 更多操作菜单
-      '.topic-map',          // 话题地图
-      '.post-admin-menu'     // 管理菜单
-    ];
-
-    let isInPostMenu = false;
-    for (const selector of postMenuAreas) {
-      if (element.closest(selector)) {
-        isInPostMenu = true;
-        break;
-      }
-    }
-
-    // 如果不在帖子操作区域内，直接返回 false
-    if (!isInPostMenu) {
-      return { isLink: false, postNumber: null };
-    }
-
-    // 检查元素特征是否像链接按钮
-    const text = element.textContent || '';
-    const className = element.className || '';
+    // V3.5.8: 最严格的检测 - 只检测 Discourse 的 share 按钮
+    // Discourse 的分享按钮特征：data-value="share"
     const dataValue = element.getAttribute('data-value') || '';
-    const title = element.title || '';
-    const ariaLabel = element.getAttribute('aria-label') || '';
 
-    // 链接按钮的特征（更严格的检测）
-    // 优先检测 data-value 属性（Discourse 标准）
-    const isShareButton = dataValue === 'share' || dataValue === 'link';
-
-    // 如果没有 data-value，再检查其他特征（仅限文本精确匹配）
-    const isLinkLike = isShareButton ||
-           className.includes('share') ||
-           text.trim() === '链接' ||
-           text.trim() === 'Link' ||
-           text.trim() === 'Share' ||
-           title === '分享此帖子的链接' ||
-           title.toLowerCase() === 'share a link to this post' ||
-           ariaLabel === '分享此帖子的链接' ||
-           ariaLabel.toLowerCase() === 'share a link to this post';
-
-    // 如果不像链接按钮，直接返回 false
-    if (!isLinkLike) {
+    // 只有 data-value="share" 的按钮才会被拦截
+    if (dataValue !== 'share') {
       return { isLink: false, postNumber: null };
     }
 
-    // 排除导航栏、用户中心等区域的链接
-    const excludeAreas = [
-      '.d-header',           // 顶部导航栏
-      '.user-main',          // 用户中心主区域
-      '.user-navigation',    // 用户导航
-      '.user-nav',           // 用户导航
-      '.nav-pills',          // 导航标签
-      '.activity-nav',       // 活动导航
-      '.user-stream',        // 用户流
-      '.nav-stacked',        // 堆叠导航
-      '.navigation-container' // 导航容器
-    ];
-
-    for (const selector of excludeAreas) {
-      if (element.closest(selector)) {
-        console.log('[LinuxDo→Obsidian] 链接按钮在排除区域内:', selector);
-        return { isLink: false, postNumber: null };
-      }
-    }
-
-    // 检查是否是 URL 导航链接（href 包含特定路径）
-    const href = element.getAttribute('href') || '';
-    if (href.includes('/bookmarks') || href.includes('/activity') || href.includes('/u/')) {
-      console.log('[LinuxDo→Obsidian] 排除导航链接:', href);
-      return { isLink: false, postNumber: null };
-    }
-
-    // 检查是在主帖还是评论区
+    // 必须在帖子容器内
     const postContainer = element.closest('.topic-post, article[data-post-id]');
-    let postNumber = '1'; // 默认是主帖
-    if (postContainer) {
-      postNumber = postContainer.getAttribute('data-post-number') ||
-                   postContainer.querySelector('[data-post-number]')?.getAttribute('data-post-number') ||
-                   '1';
+    if (!postContainer) {
+      return { isLink: false, postNumber: null };
     }
+
+    // 获取楼层号
+    const postNumber = postContainer.getAttribute('data-post-number') ||
+                       postContainer.querySelector('[data-post-number]')?.getAttribute('data-post-number') ||
+                       '1';
 
     console.log('[LinuxDo→Obsidian] 检测到链接按钮，楼层:', postNumber);
     return { isLink: true, postNumber: postNumber };
