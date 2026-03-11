@@ -837,26 +837,25 @@
       if (feishuConfigComplete) {
         console.log('[LinuxDo→飞书] 检测到飞书配置，开始同步...');
 
+        // V3.5.5: 统一清理URL，移除查询参数和锚点，确保URL一致性
+        // 先清理基础URL
+        let cleanUrl = url.replace(/#.*$/, '').replace(/\?.*$/, '');
+
         // V3.5.4: 评论书签保存时，URL和标题加上楼层标识，避免覆盖主帖记录
         // Discourse 的楼层 URL 格式是 /t/topic-slug/123/2（直接加楼层号）
-        let feishuUrl = url;
+        let feishuUrl = cleanUrl;
         let feishuTitle = title;
         if (isSingleCommentMode) {
           // URL格式: /t/topic-slug/123 或 /t/topic-slug/123/2
           // 需要保留帖子ID（第一个数字），只替换/添加楼层号（第二个数字）
-          let baseUrl = url;
-
-          // 移除末尾的锚点和查询参数
-          baseUrl = baseUrl.replace(/#.*$/, '').replace(/\?.*$/, '');
-
           // 检查URL是否已经有楼层号（格式：/t/slug/123/2）
           // 匹配：保留到帖子ID为止，移除可能存在的楼层号
-          const match = baseUrl.match(/^(.*\/t\/[^/]+\/\d+)(\/\d+)?$/);
+          const match = cleanUrl.match(/^(.*\/t\/[^/]+\/\d+)(\/\d+)?$/);
           if (match) {
-            baseUrl = match[1]; // 保留 /t/slug/123 部分
+            cleanUrl = match[1]; // 保留 /t/slug/123 部分
           }
 
-          feishuUrl = `${baseUrl}/${targetPostNumber}`;  // /t/xxx/123/2 可正常跳转
+          feishuUrl = `${cleanUrl}/${targetPostNumber}`;  // /t/xxx/123/2 可正常跳转
           feishuTitle = `${title} [${targetPostNumber}楼]`;
         }
 
