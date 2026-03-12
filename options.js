@@ -1,10 +1,14 @@
-// LinuxDo Saver V3.5 - 设置页面
+// Discourse Saver V3.6.0 - 设置页面
 // 支持 Obsidian 和飞书多维表格
+// V3.6.0: 支持所有 Discourse 论坛 + 自定义站点管理
 
 // 默认配置
 const DEFAULT_CONFIG = {
   // 插件总开关
   pluginEnabled: true,
+
+  // 自定义站点列表 (V3.6.0)
+  customSites: [],
 
   // 保存目标
   saveToObsidian: true,
@@ -12,7 +16,7 @@ const DEFAULT_CONFIG = {
 
   // Obsidian 设置
   vaultName: '',
-  folderPath: 'LinuxDo收集箱',
+  folderPath: 'Discourse收集箱',
   useAdvancedUri: true,
 
   // 飞书设置
@@ -27,17 +31,123 @@ const DEFAULT_CONFIG = {
   addMetadata: true,
   includeImages: true,
 
+  // 图片嵌入设置 (V3.6.0)
+  embedImages: false,
+  imageMaxWidth: 1920,
+  imageQuality: 0.9,
+  imageSkipGif: true,
+
   // 评论设置
   saveComments: false,
   commentCount: 100,
   foldComments: false
 };
 
+// 渲染自定义站点列表
+function renderCustomSites(sites) {
+  const container = document.getElementById('customSitesList');
+  container.innerHTML = '';
+
+  if (!sites || sites.length === 0) {
+    return;
+  }
+
+  sites.forEach((site, index) => {
+    const item = document.createElement('div');
+    item.className = 'site-item';
+    item.innerHTML = `
+      <span class="site-url">${escapeHtml(site)}</span>
+      <button type="button" class="remove-btn" data-index="${index}">删除</button>
+    `;
+    container.appendChild(item);
+  });
+
+  // 添加删除事件监听
+  container.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const index = parseInt(e.target.dataset.index);
+      removeSite(index);
+    });
+  });
+}
+
+// HTML 转义
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 添加站点
+function addSite() {
+  const input = document.getElementById('newSiteInput');
+  let site = input.value.trim();
+
+  if (!site) {
+    showStatus('请输入站点域名', 'error');
+    return;
+  }
+
+  // 清理输入，提取域名
+  site = site.replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
+
+  // 验证域名格式
+  if (!/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i.test(site)) {
+    showStatus('域名格式不正确', 'error');
+    return;
+  }
+
+  chrome.storage.sync.get({ customSites: [] }, (config) => {
+    const sites = config.customSites || [];
+
+    // 检查是否已存在
+    if (sites.includes(site)) {
+      showStatus('该站点已存在', 'error');
+      return;
+    }
+
+    sites.push(site);
+
+    chrome.storage.sync.set({ customSites: sites }, () => {
+      if (chrome.runtime.lastError) {
+        showStatus('添加失败: ' + chrome.runtime.lastError.message, 'error');
+        return;
+      }
+      input.value = '';
+      renderCustomSites(sites);
+      showStatus('站点已添加', 'success');
+    });
+  });
+}
+
+// 删除站点
+function removeSite(index) {
+  chrome.storage.sync.get({ customSites: [] }, (config) => {
+    const sites = config.customSites || [];
+
+    if (index >= 0 && index < sites.length) {
+      sites.splice(index, 1);
+
+      chrome.storage.sync.set({ customSites: sites }, () => {
+        if (chrome.runtime.lastError) {
+          showStatus('删除失败: ' + chrome.runtime.lastError.message, 'error');
+          return;
+        }
+        renderCustomSites(sites);
+        showStatus('站点已删除', 'success');
+      });
+    }
+  });
+}
+
 // 加载配置
 function loadOptions() {
   chrome.storage.sync.get(DEFAULT_CONFIG, (config) => {
     // 插件开关
     document.getElementById('pluginEnabled').checked = config.pluginEnabled;
+
+    // 自定义站点 (V3.6.0)
+    renderCustomSites(config.customSites || []);
 
     // 保存目标
     document.getElementById('saveToObsidian').checked = config.saveToObsidian;
@@ -60,6 +170,12 @@ function loadOptions() {
     document.getElementById('addMetadata').checked = config.addMetadata;
     document.getElementById('includeImages').checked = config.includeImages;
 
+    // 图片嵌入设置 (V3.6.0)
+    document.getElementById('embedImages').checked = config.embedImages;
+    document.getElementById('imageMaxWidth').value = config.imageMaxWidth;
+    document.getElementById('imageQuality').value = config.imageQuality;
+    document.getElementById('imageSkipGif').checked = config.imageSkipGif;
+
     // 评论设置
     document.getElementById('saveComments').checked = config.saveComments;
     document.getElementById('commentCount').value = config.commentCount;
@@ -69,6 +185,7 @@ function loadOptions() {
     updateObsidianSectionVisibility(config.saveToObsidian);
     updateFeishuOptionsVisibility(config.saveToFeishu);
     updateCommentOptionsVisibility(config.saveComments);
+    updateImageSettingsVisibility(config.embedImages);
   });
 }
 
@@ -102,6 +219,33 @@ function updateCommentOptionsVisibility(enabled) {
     } else {
       commentOptions.classList.add('disabled');
     }
+  }
+}
+
+// 更新图片设置面板可见性 (V3.6.0)
+function updateImageSettingsVisibility(enabled) {
+  const content = document.getElementById('imageSettingsContent');
+  const icon = document.getElementById('imageSettingsIcon');
+
+  if (content && icon) {
+    if (enabled) {
+      content.classList.add('expanded');
+      icon.classList.add('expanded');
+    } else {
+      content.classList.remove('expanded');
+      icon.classList.remove('expanded');
+    }
+  }
+}
+
+// 切换图片设置面板展开/折叠
+function toggleImageSettings() {
+  const content = document.getElementById('imageSettingsContent');
+  const icon = document.getElementById('imageSettingsIcon');
+
+  if (content && icon) {
+    content.classList.toggle('expanded');
+    icon.classList.toggle('expanded');
   }
 }
 
@@ -139,6 +283,12 @@ function saveOptions(e) {
     addMetadata: document.getElementById('addMetadata').checked,
     includeImages: document.getElementById('includeImages').checked,
 
+    // 图片嵌入设置 (V3.6.0)
+    embedImages: document.getElementById('embedImages').checked,
+    imageMaxWidth: parseInt(document.getElementById('imageMaxWidth').value) || 1920,
+    imageQuality: parseFloat(document.getElementById('imageQuality').value) || 0.9,
+    imageSkipGif: document.getElementById('imageSkipGif').checked,
+
     // 评论设置
     saveComments: document.getElementById('saveComments').checked,
     commentCount: commentCount,
@@ -157,6 +307,14 @@ function saveOptions(e) {
       showStatus('请填写完整的飞书配置信息', 'error');
       return;
     }
+  }
+
+  // V3.6.0: 验证图片嵌入需要 Advanced URI
+  if (config.embedImages && config.saveToObsidian && !config.useAdvancedUri) {
+    // 自动启用 Advanced URI
+    config.useAdvancedUri = true;
+    document.getElementById('useAdvancedUri').checked = true;
+    showStatus('已自动启用 Advanced URI（图片嵌入必需）', 'info');
   }
 
   chrome.storage.sync.set(config, () => {
@@ -253,6 +411,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // 测试飞书连接
   document.getElementById('testFeishuBtn').addEventListener('click', testFeishuConnection);
 
+  // 添加自定义站点 (V3.6.0)
+  document.getElementById('addSiteBtn').addEventListener('click', addSite);
+
+  // 回车添加站点
+  document.getElementById('newSiteInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addSite();
+    }
+  });
+
   // 保存目标复选框变化
   document.getElementById('saveToObsidian').addEventListener('change', (e) => {
     updateObsidianSectionVisibility(e.target.checked);
@@ -265,6 +434,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // 保存评论复选框控制子选项
   document.getElementById('saveComments').addEventListener('change', (e) => {
     updateCommentOptionsVisibility(e.target.checked);
+  });
+
+  // 图片嵌入设置折叠面板 (V3.6.0)
+  document.getElementById('embedImages').addEventListener('change', (e) => {
+    updateImageSettingsVisibility(e.target.checked);
+
+    // 启用图片嵌入时，自动启用 Advanced URI（必需）
+    if (e.target.checked) {
+      const advancedUriCheckbox = document.getElementById('useAdvancedUri');
+      if (advancedUriCheckbox && !advancedUriCheckbox.checked) {
+        advancedUriCheckbox.checked = true;
+        showStatus('已自动启用 Advanced URI（图片嵌入必需）', 'info');
+      }
+    }
+  });
+
+  // 点击折叠面板标题（除checkbox外）切换展开/折叠
+  document.getElementById('imageSettingsIcon').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleImageSettings();
   });
 
   // 移除文件夹路径首尾斜杠

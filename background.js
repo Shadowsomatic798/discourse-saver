@@ -1,5 +1,5 @@
-// LinuxDo to Obsidian - Background Script V3.5.13
-// 处理飞书API请求（解决CORS问题）
+// Discourse Saver - Background Script V3.6.0
+// 处理飞书API请求（解决CORS问题）+ 动态脚本注入
 // V3.5: 支持上传MD文件作为附件
 // V3.5.2: 支持飞书国内版和Lark国际版
 // V3.5.3: 配合 content.js 支持评论书签功能
@@ -7,6 +7,7 @@
 // V3.5.5: 修复飞书记录搜索 - 改用标题搜索（超链接字段contains不搜索URL）
 // V3.5.12: 增强飞书测试连接 - 验证必需字段是否存在及类型是否正确
 // V3.5.13: 增强错误提示 - 针对常见配置错误给出友好提示
+// V3.6.0: 支持所有 Discourse 论坛 - 自动检测 + 自定义站点管理
 
 // API 域名映射
 const API_DOMAINS = {
@@ -268,12 +269,12 @@ async function getFeishuToken(appId, appSecret, apiDomain = 'feishu') {
 
   // 检查缓存是否有效（提前5分钟过期）
   if (cache.token && Date.now() < cache.expireTime - 300000) {
-    console.log('[LinuxDo→飞书] 使用缓存的token');
+    console.log('[Discourse Saver→飞书] 使用缓存的token');
     return cache.token;
   }
 
   const baseUrl = getApiBaseUrl(apiDomain);
-  console.log('[LinuxDo→飞书] 获取新的tenant_access_token，API域名:', baseUrl);
+  console.log('[Discourse Saver→飞书] 获取新的tenant_access_token，API域名:', baseUrl);
 
   let response;
   try {
@@ -304,13 +305,13 @@ async function getFeishuToken(appId, appSecret, apiDomain = 'feishu') {
   feishuTokenCache[apiDomain].token = data.tenant_access_token;
   feishuTokenCache[apiDomain].expireTime = Date.now() + (data.expire * 1000);
 
-  console.log('[LinuxDo→飞书] 获取token成功');
+  console.log('[Discourse Saver→飞书] 获取token成功');
   return data.tenant_access_token;
 }
 
 // V3.5: 上传MD文件到飞书素材库
 async function uploadMdFile(token, appToken, title, mdContent, apiDomain = 'feishu') {
-  console.log('[LinuxDo→飞书] 开始上传MD文件...');
+  console.log('[Discourse Saver→飞书] 开始上传MD文件...');
 
   // 清理文件名中的非法字符
   const safeTitle = title
@@ -344,11 +345,11 @@ async function uploadMdFile(token, appToken, title, mdContent, apiDomain = 'feis
   const data = await safeParseJson(response, '上传文件');
 
   if (data.code !== 0) {
-    console.error('[LinuxDo→飞书] 上传文件失败:', data);
+    console.error('[Discourse Saver→飞书] 上传文件失败:', data);
     throw new Error(`上传文件失败: ${data.msg}`);
   }
 
-  console.log('[LinuxDo→飞书] 文件上传成功，file_token:', data.data.file_token);
+  console.log('[Discourse Saver→飞书] 文件上传成功，file_token:', data.data.file_token);
   return data.data.file_token;
 }
 
@@ -382,9 +383,9 @@ async function saveToFeishu(config, postData) {
     try {
       fileToken = await uploadMdFile(token, appToken, postData.title, postData.content, domain);
       fields['附件'] = [{ file_token: fileToken }];
-      console.log('[LinuxDo→飞书] MD附件上传成功');
+      console.log('[Discourse Saver→飞书] MD附件上传成功');
     } catch (uploadError) {
-      console.warn('[LinuxDo→飞书] MD文件上传失败，改为保存文本:', uploadError.message);
+      console.warn('[Discourse Saver→飞书] MD文件上传失败，改为保存文本:', uploadError.message);
       fields['正文'] = postData.content;
     }
   } else {
@@ -418,7 +419,7 @@ async function saveToFeishu(config, postData) {
     throw new Error(parseFeishuError(data.code, data.msg, '保存记录'));
   }
 
-  console.log('[LinuxDo→飞书] 保存成功，record_id:', data.data.record.record_id);
+  console.log('[Discourse Saver→飞书] 保存成功，record_id:', data.data.record.record_id);
   return data.data.record;
 }
 
@@ -512,7 +513,7 @@ async function findFeishuRecord(config, url, title) {
   // 提取基础标题（去掉楼层后缀如 " [2楼]"）
   const baseTitle = title.replace(/\s*\[\d+楼\]$/, '');
 
-  console.log('[LinuxDo→飞书] 搜索标题:', baseTitle);
+  console.log('[Discourse Saver→飞书] 搜索标题:', baseTitle);
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -539,33 +540,33 @@ async function findFeishuRecord(config, url, title) {
   try {
     data = await safeParseJson(response, '搜索记录');
   } catch (e) {
-    console.log('[LinuxDo→飞书] 搜索记录失败:', e.message);
+    console.log('[Discourse Saver→飞书] 搜索记录失败:', e.message);
     return null;
   }
 
   if (data.code !== 0) {
     // 搜索API可能不可用，返回null表示未找到
-    console.log('[LinuxDo→飞书] 搜索记录失败:', data.msg);
+    console.log('[Discourse Saver→飞书] 搜索记录失败:', data.msg);
     return null;
   }
 
   // V3.5.5: 在结果中精确匹配 URL，确保找到正确的记录
   if (data.data.total > 0 && data.data.items) {
-    console.log('[LinuxDo→飞书] 找到', data.data.items.length, '条可能匹配的记录');
+    console.log('[Discourse Saver→飞书] 找到', data.data.items.length, '条可能匹配的记录');
 
     for (const item of data.data.items) {
       const recordLink = item.fields?.['链接'];
       // 超链接字段格式: { link: "url", text: "title" } 或直接是字符串
       const recordUrl = typeof recordLink === 'object' ? recordLink.link : recordLink;
 
-      console.log('[LinuxDo→飞书] 比对URL:', recordUrl, 'vs', url);
+      console.log('[Discourse Saver→飞书] 比对URL:', recordUrl, 'vs', url);
 
       if (recordUrl === url) {
-        console.log('[LinuxDo→飞书] 找到精确匹配的记录:', item.record_id);
+        console.log('[Discourse Saver→飞书] 找到精确匹配的记录:', item.record_id);
         return item;
       }
     }
-    console.log('[LinuxDo→飞书] 未找到精确匹配的URL，将新建记录');
+    console.log('[Discourse Saver→飞书] 未找到精确匹配的URL，将新建记录');
   }
 
   return null;
@@ -596,9 +597,9 @@ async function updateFeishuRecord(config, recordId, postData) {
     try {
       fileToken = await uploadMdFile(token, appToken, postData.title, postData.content, domain);
       fields['附件'] = [{ file_token: fileToken }];
-      console.log('[LinuxDo→飞书] MD附件更新成功');
+      console.log('[Discourse Saver→飞书] MD附件更新成功');
     } catch (uploadError) {
-      console.warn('[LinuxDo→飞书] MD文件上传失败，改为保存文本:', uploadError.message);
+      console.warn('[Discourse Saver→飞书] MD文件上传失败，改为保存文本:', uploadError.message);
       fields['正文'] = postData.content;
     }
   } else {
@@ -630,16 +631,76 @@ async function updateFeishuRecord(config, recordId, postData) {
     throw new Error(parseFeishuError(data.code, data.msg, '更新记录'));
   }
 
-  console.log('[LinuxDo→飞书] 更新成功');
+  console.log('[Discourse Saver→飞书] 更新成功');
   return data.data.record;
 }
 
 // 监听来自content script的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // V3.6.0: 处理动态脚本注入请求（来自 detector.js）
+  if (request.action === 'injectContentScript') {
+    console.log('[Discourse Saver] 收到脚本注入请求，URL:', request.tabUrl);
+
+    (async () => {
+      try {
+        const tabId = sender.tab?.id;
+        if (!tabId) {
+          console.error('[Discourse Saver] 无法获取标签页ID');
+          sendResponse({ success: false, error: '无法获取标签页ID' });
+          return;
+        }
+
+        // 检查是否已经注入过（防止重复注入）
+        try {
+          const result = await chrome.scripting.executeScript({
+            target: { tabId },
+            func: () => window.__discourseSaverInjected
+          });
+
+          if (result[0]?.result === true) {
+            console.log('[Discourse Saver] 脚本已注入，跳过');
+            sendResponse({ success: true, skipped: true });
+            return;
+          }
+        } catch (checkError) {
+          // 忽略检查错误，继续注入
+          console.log('[Discourse Saver] 检查注入状态失败，继续注入');
+        }
+
+        // 注入 turndown 库
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          files: ['turndown.min.js']
+        });
+        console.log('[Discourse Saver] turndown.min.js 注入成功');
+
+        // 注入主脚本
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          files: ['content.js']
+        });
+        console.log('[Discourse Saver] content.js 注入成功');
+
+        // 标记已注入
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          func: () => { window.__discourseSaverInjected = true; }
+        });
+
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('[Discourse Saver] 脚本注入失败:', error);
+        sendResponse({ success: false, error: error.message });
+      }
+    })();
+
+    return true; // 异步响应
+  }
+
   if (request.action === 'saveToFeishu') {
-    console.log('[LinuxDo→飞书] 收到保存请求');
-    console.log('[LinuxDo→飞书] 标题:', request.postData.title);
-    console.log('[LinuxDo→飞书] URL:', request.postData.url);
+    console.log('[Discourse Saver→飞书] 收到保存请求');
+    console.log('[Discourse Saver→飞书] 标题:', request.postData.title);
+    console.log('[Discourse Saver→飞书] URL:', request.postData.url);
 
     (async () => {
       try {
@@ -651,7 +712,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         let result;
         if (existingRecord) {
           // 更新现有记录
-          console.log('[LinuxDo→飞书] 找到现有记录，更新中...');
+          console.log('[Discourse Saver→飞书] 找到现有记录，更新中...');
           result = await updateFeishuRecord(config, existingRecord.record_id, postData);
           sendResponse({ success: true, action: 'updated', record: result });
         } else {
@@ -660,7 +721,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse({ success: true, action: 'created', record: result });
         }
       } catch (error) {
-        console.error('[LinuxDo→飞书] 保存失败:', error);
+        console.error('[Discourse Saver→飞书] 保存失败:', error);
         sendResponse({ success: false, error: error.message });
       }
     })();
@@ -670,7 +731,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'testFeishuConnection') {
-    console.log('[LinuxDo→飞书] 测试连接');
+    console.log('[Discourse Saver→飞书] 测试连接');
 
     (async () => {
       try {
@@ -679,7 +740,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const baseUrl = getApiBaseUrl(domain);
 
         // 步骤0: 验证配置参数格式
-        console.log('[LinuxDo→飞书] 步骤0: 验证配置参数...');
+        console.log('[Discourse Saver→飞书] 步骤0: 验证配置参数...');
         try {
           validateFeishuConfig(request.config);
         } catch (validationError) {
@@ -688,14 +749,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // 步骤1: 测试获取 token
-        console.log('[LinuxDo→飞书] 步骤1: 获取 token...');
+        console.log('[Discourse Saver→飞书] 步骤1: 获取 token...');
         const token = await getFeishuToken(appId, appSecret, domain);
-        console.log('[LinuxDo→飞书] Token 获取成功');
+        console.log('[Discourse Saver→飞书] Token 获取成功');
 
         // 步骤2: 获取表格字段列表
-        console.log('[LinuxDo→飞书] 步骤2: 获取表格字段列表...');
+        console.log('[Discourse Saver→飞书] 步骤2: 获取表格字段列表...');
         const fieldsUrl = `${baseUrl}/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/fields`;
-        console.log('[LinuxDo→飞书] 字段列表 API URL:', fieldsUrl);
+        console.log('[Discourse Saver→飞书] 字段列表 API URL:', fieldsUrl);
 
         let fieldsResponse;
         try {
@@ -716,7 +777,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // 步骤3: 验证字段
-        console.log('[LinuxDo→飞书] 步骤3: 验证字段配置...');
+        console.log('[Discourse Saver→飞书] 步骤3: 验证字段配置...');
         const fields = fieldsData.data?.items || [];
 
         // 飞书字段类型映射
@@ -789,7 +850,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // 步骤4: 测试访问记录
-        console.log('[LinuxDo→飞书] 步骤4: 测试访问表格记录...');
+        console.log('[Discourse Saver→飞书] 步骤4: 测试访问表格记录...');
         const recordsUrl = `${baseUrl}/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records?page_size=1`;
 
         let recordsResponse;
@@ -831,7 +892,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                    `  ${detectedFields}`
         });
       } catch (error) {
-        console.error('[LinuxDo→飞书] 测试连接失败:', error);
+        console.error('[Discourse Saver→飞书] 测试连接失败:', error);
         sendResponse({ success: false, error: error.message });
       }
     })();
@@ -861,4 +922,4 @@ function getFieldTypeName(typeCode) {
   return typeNames[typeCode] || `未知类型(${typeCode})`;
 }
 
-console.log('[LinuxDo→Obsidian] Background script 已加载 (V3.5.13)');
+console.log('[Discourse Saver] Background script 已加载 (V3.6.0)');

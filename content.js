@@ -1,19 +1,20 @@
-// LinuxDo to Obsidian - Content Script V3.5.13
+// Discourse Saver - Content Script V3.6.0
 // 劫持链接按钮，保存帖子+评论到Obsidian（保留颜色样式）
 // V3.5: 支持同时保存到飞书多维表格（带MD附件）
-// V3.5.1: 单击保存到Obsidian，双击触发L站原生收藏
+// V3.5.1: 单击保存到Obsidian，双击触发原生复制链接
 // V3.5.2: 支持飞书国内版和Lark国际版
-// V3.5.3: 支持评论区书签按钮 - 点击评论书签保存主帖+该评论
-// V3.5.4: 修复双击检测竞态条件 + 改进原生收藏触发机制
+// V3.5.3: 支持评论区链接按钮 - 点击评论链接保存主帖+该评论
+// V3.5.4: 修复双击检测竞态条件 + 改进原生复制链接触发机制
 // V3.5.5: 修复飞书记录重复问题（搜索逻辑改进）
 // V3.5.6: 保存时间改为北京时间格式
-// V3.5.7: 改为劫持链接按钮（原书签按钮改为链接按钮）
+// V3.5.7: 改为劫持链接按钮
 // V3.5.8: 修复误触发问题 - 增加严格的区域检测，只拦截帖子操作菜单中的链接按钮
 // V3.5.9: 增强链接按钮检测 - 使用 post-action-menu__copy-link class
 // V3.5.10: 修复评论楼层号获取 - 从 .topic-post 而非 article 获取 data-post-number
 // V3.5.11: 明确支持 Edge/Brave/Opera 等 Chromium 浏览器
 // V3.5.12: 飞书字段验证功能
-// V3.5.13: 增强错误提示 + UI文字更新（链接按钮）+ Mac快捷键支持
+// V3.5.13: 增强错误提示 + UI文字更新 + Mac快捷键支持
+// V3.6.0: 支持所有 Discourse 论坛 + 自定义站点管理 + 图片 Base64 嵌入
 //
 // 功能说明：
 // - 点击主帖链接按钮：保存主帖（如开启"保存评论"则包含所有评论）
@@ -28,14 +29,23 @@
     // V3.5.1: 插件总开关
     pluginEnabled: true,
 
+    // V3.6.0: 自定义站点列表
+    customSites: [],
+
     vaultName: '',
-    folderPath: 'LinuxDo收集箱',
+    folderPath: 'Discourse收集箱',
     addMetadata: true,
     includeImages: true,
     saveComments: false,
     commentCount: 100,
     foldComments: false,  // V3.2: 默认不折叠，使用普通Markdown格式
     useAdvancedUri: true, // V3.4: 默认使用 Advanced URI 插件
+
+    // V3.6.0: 图片嵌入设置
+    embedImages: false,
+    imageMaxWidth: 1920,
+    imageQuality: 0.9,
+    imageSkipGif: true,
 
     // V3.5: 飞书设置
     saveToObsidian: true,
@@ -118,7 +128,7 @@
                        postContainer.querySelector('[data-post-number]')?.getAttribute('data-post-number') ||
                        '1';
 
-    console.log('[LinuxDo→Obsidian] 检测到链接按钮，楼层:', postNumber);
+    console.log('[Discourse Saver] 检测到链接按钮，楼层:', postNumber);
     return { isLink: true, postNumber: postNumber };
   }
 
@@ -136,7 +146,7 @@
   function hijackLinkButton() {
     // 防止重复添加事件监听器
     if (eventListenerAdded) {
-      console.log('[LinuxDo→Obsidian] 事件监听器已存在，跳过添加');
+      console.log('[Discourse Saver] 事件监听器已存在，跳过添加');
       return;
     }
     eventListenerAdded = true;
@@ -153,7 +163,7 @@
 
       // V3.5.3.1: 检查是否有bypass标记（用于触发原生复制链接）
       if (target?.hasAttribute('data-linuxdo-obsidian-bypass')) {
-        console.log('[LinuxDo→Obsidian] 检测到bypass标记，放行原生点击');
+        console.log('[Discourse Saver] 检测到bypass标记，放行原生点击');
         return; // 不拦截，让原生事件通过
       }
 
@@ -188,7 +198,7 @@
 
         if (linkClickCount === 2 && isSameButton) {
           // 双击同一个按钮：触发原生复制链接
-          console.log('[LinuxDo→Obsidian] 双击检测，触发原生复制链接，楼层:', linkResult.postNumber);
+          console.log('[Discourse Saver] 双击检测，触发原生复制链接，楼层:', linkResult.postNumber);
           linkClickCount = 0;
           lastLinkPostNumber = null;
           triggerOriginalCopyLink(target);
@@ -199,10 +209,10 @@
             if (linkClickCount === 1) {
               // 单击：保存到Obsidian
               if (postNumber === '1') {
-                console.log('[LinuxDo→Obsidian] 单击主帖链接按钮，保存整个帖子');
+                console.log('[Discourse Saver] 单击主帖链接按钮，保存整个帖子');
                 saveToObsidian(null); // 主帖：按原逻辑保存
               } else {
-                console.log('[LinuxDo→Obsidian] 单击评论链接按钮，保存主帖+第' + postNumber + '楼评论');
+                console.log('[Discourse Saver] 单击评论链接按钮，保存主帖+第' + postNumber + '楼评论');
                 saveToObsidian(postNumber); // 评论：保存主帖+该评论
               }
             }
@@ -215,7 +225,7 @@
       }
     }, true);
 
-    console.log('[LinuxDo→Obsidian] 链接按钮劫持已激活 (V3.5.10)');
+    console.log('[Discourse Saver] 链接按钮劫持已激活 (V3.6.0)');
   }
 
   // V3.5.7: 触发原生复制链接功能
@@ -242,7 +252,7 @@
       }
     }
 
-    console.log('[LinuxDo→Obsidian] 复制链接:', linkUrl);
+    console.log('[Discourse Saver] 复制链接:', linkUrl);
 
     // 使用 Clipboard API 复制
     navigator.clipboard.writeText(linkUrl)
@@ -254,7 +264,7 @@
         }
       })
       .catch(err => {
-        console.error('[LinuxDo→Obsidian] 剪贴板复制失败:', err);
+        console.error('[Discourse Saver] 剪贴板复制失败:', err);
         // 回退方法：触发原生点击
         fallbackTriggerCopyLink(target);
       });
@@ -262,7 +272,7 @@
 
   // 回退方法：临时禁用插件拦截，触发原生点击
   function fallbackTriggerCopyLink(target) {
-    console.log('[LinuxDo→Obsidian] 使用回退方法触发原生复制链接');
+    console.log('[Discourse Saver] 使用回退方法触发原生复制链接');
 
     // 临时标记，让下一次点击通过
     target.setAttribute('data-linuxdo-obsidian-bypass', 'true');
@@ -356,7 +366,7 @@
       }
     }
 
-    console.log(`[LinuxDo→Obsidian] 提取到 ${comments.length} 条评论`);
+    console.log(`[Discourse Saver] 提取到 ${comments.length} 条评论`);
     return comments;
   }
 
@@ -393,7 +403,7 @@
                       (likesEl.getAttribute('content') || likesEl.textContent.replace(/[^\d]/g, '')) : '0';
 
         if (contentHTML) {
-          console.log(`[LinuxDo→Obsidian] 提取到第${postNumber}楼评论，作者: ${username}`);
+          console.log(`[Discourse Saver] 提取到第${postNumber}楼评论，作者: ${username}`);
           return {
             username,
             contentHTML,
@@ -405,7 +415,7 @@
       }
     }
 
-    console.log(`[LinuxDo→Obsidian] 未找到第${postNumber}楼评论`);
+    console.log(`[Discourse Saver] 未找到第${postNumber}楼评论`);
     return null;
   }
 
@@ -582,7 +592,8 @@
   }
 
   // V3.2: 清理Markdown中的残留语法（保守版，不破坏正常链接和图片）
-  function cleanupMarkdown(markdown) {
+  // V3.6.0: 添加 keepGif 参数，在启用图片嵌入时保留 GIF 链接
+  function cleanupMarkdown(markdown, keepGif = false) {
     // 1. 移除空锚点链接 [](#anchor-id)
     markdown = markdown.replace(/\[\s*\]\(#[^)]*\)/g, '');
 
@@ -602,13 +613,178 @@
     markdown = markdown.replace(/<aside[^>]*>[\s\S]*?<\/aside>/gi, '');
     markdown = markdown.replace(/<article[^>]*>[\s\S]*?<\/article>/gi, '');
 
-    // 7. 移除GIF图片链接
-    markdown = markdown.replace(/!\[[^\]]*\]\([^)]*\.gif[^)]*\)/gi, '');
+    // 7. 移除GIF图片链接（V3.6.0: 除非 keepGif 为 true）
+    if (!keepGif) {
+      markdown = markdown.replace(/!\[[^\]]*\]\([^)]*\.gif[^)]*\)/gi, '');
+    }
 
     // 8. 移除多余空行
     markdown = markdown.replace(/\n{3,}/g, '\n\n');
 
     return markdown;
+  }
+
+  // V3.6.0: 图片转 Base64 功能
+  // 下载图片并转为 Base64 数据
+  async function fetchImageAsBase64(url, maxWidth, quality, skipGif) {
+    try {
+      // 检查是否为 GIF
+      if (skipGif && /\.gif(\?|$)/i.test(url)) {
+        console.log('[Discourse Saver] 跳过 GIF 图片:', url);
+        return null;
+      }
+
+      // 获取图片
+      const response = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      if (!response.ok) {
+        console.warn('[Discourse Saver] 图片下载失败:', url, response.status);
+        return null;
+      }
+
+      const blob = await response.blob();
+
+      // 检查是否为 GIF（通过 MIME 类型）
+      if (skipGif && blob.type === 'image/gif') {
+        console.log('[Discourse Saver] 跳过 GIF 图片 (MIME):', url);
+        return null;
+      }
+
+      // 使用 Canvas 处理图片（压缩和转换）
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        // 创建 Object URL 并在使用后释放，避免内存泄漏
+        const blobUrl = URL.createObjectURL(blob);
+
+        img.onload = () => {
+          // 释放 Object URL
+          URL.revokeObjectURL(blobUrl);
+
+          try {
+            let width = img.width;
+            let height = img.height;
+
+            // 如果设置了最大宽度且图片超宽，等比缩放
+            if (maxWidth > 0 && width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 转为 Base64（JPEG 格式，支持质量压缩）
+            // 对于透明图片使用 PNG
+            const hasAlpha = blob.type === 'image/png';
+            const outputType = hasAlpha ? 'image/png' : 'image/jpeg';
+            const base64 = canvas.toDataURL(outputType, quality);
+
+            console.log('[Discourse Saver] 图片转换成功:', url, `${img.width}x${img.height} → ${width}x${height}`);
+            resolve(base64);
+          } catch (e) {
+            console.warn('[Discourse Saver] Canvas 处理失败:', e);
+            resolve(null);
+          }
+        };
+
+        img.onerror = () => {
+          // 释放 Object URL
+          URL.revokeObjectURL(blobUrl);
+          console.warn('[Discourse Saver] 图片加载失败:', url);
+          resolve(null);
+        };
+
+        img.src = blobUrl;
+      });
+    } catch (error) {
+      console.warn('[Discourse Saver] 获取图片异常:', url, error);
+      return null;
+    }
+  }
+
+  // 处理 Markdown 中的所有图片，转换为 Base64
+  async function processMarkdownImages(markdown, config) {
+    if (!config.embedImages) {
+      return markdown;
+    }
+
+    console.log('[Discourse Saver] 开始处理图片嵌入...');
+
+    // 匹配 Markdown 图片语法 ![alt](url)
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    const images = [];
+    let match;
+
+    // 收集所有图片
+    while ((match = imageRegex.exec(markdown)) !== null) {
+      images.push({
+        fullMatch: match[0],
+        alt: match[1],
+        url: match[2]
+      });
+    }
+
+    if (images.length === 0) {
+      console.log('[Discourse Saver] 没有找到需要处理的图片');
+      return markdown;
+    }
+
+    // 提取唯一的 URL 进行下载，避免重复下载相同图片
+    const uniqueUrls = [...new Set(images.map(img => img.url))];
+    console.log(`[Discourse Saver] 找到 ${images.length} 张图片（${uniqueUrls.length} 张唯一），开始转换...`);
+
+    // 并行下载所有唯一的图片
+    const urlToBase64 = new Map();
+    const results = await Promise.all(
+      uniqueUrls.map(async (url) => {
+        const base64 = await fetchImageAsBase64(
+          url,
+          config.imageMaxWidth,
+          config.imageQuality,
+          config.imageSkipGif
+        );
+        return { url, base64 };
+      })
+    );
+
+    // 构建 URL 到 Base64 的映射
+    for (const result of results) {
+      if (result.base64) {
+        urlToBase64.set(result.url, result.base64);
+      }
+    }
+
+    // 替换图片链接为 Base64
+    let processedMarkdown = markdown;
+    let successCount = 0;
+    let skipCount = 0;
+
+    for (const img of images) {
+      const base64 = urlToBase64.get(img.url);
+      if (base64) {
+        // 替换为 Base64 格式
+        processedMarkdown = processedMarkdown.replace(
+          img.fullMatch,
+          `![${img.alt}](${base64})`
+        );
+        successCount++;
+      } else {
+        // 保留原链接
+        skipCount++;
+      }
+    }
+
+    console.log(`[Discourse Saver] 图片处理完成: ${successCount} 张嵌入, ${skipCount} 张保留原链接`);
+    return processedMarkdown;
   }
 
   // V3: HTML转Markdown（带评论版本）
@@ -627,9 +803,32 @@
       });
     }
 
+    // V3.6.0: 如果启用图片嵌入且保留 GIF，则不在转换阶段移除 GIF
+    // 让后续的 processMarkdownImages 函数决定如何处理
+    if (config.embedImages && config.imageSkipGif) {
+      // 重新定义规则：保留 GIF 图片链接
+      turndownService.addRule('keepGifImages', {
+        filter: (node) => {
+          if (node.nodeName !== 'IMG') return false;
+          const src = node.src || '';
+          const className = node.className || '';
+          // 匹配 GIF 图片
+          return src.includes('.gif') || className.includes('animated');
+        },
+        replacement: (content, node) => {
+          const src = node.src;
+          if (!src) return '';
+          const fullSrc = src.startsWith('http') ? src : window.location.origin + src;
+          const alt = node.alt?.replace(/[_\d]+$/, '').trim() || 'gif';
+          return '\n\n![' + alt + '](' + fullSrc + ')\n\n';
+        }
+      });
+    }
+
     // 转换正文并清理格式
     let mainContent = turndownService.turndown(contentHTML);
-    mainContent = cleanupMarkdown(mainContent);
+    // V3.6.0: 传递配置给 cleanupMarkdown，以便在启用图片嵌入时保留 GIF
+    mainContent = cleanupMarkdown(mainContent, config.embedImages && config.imageSkipGif);
     mainContent = mainContent.trim();
 
     // 构建完整Markdown
@@ -667,7 +866,8 @@
         let commentContent = turndownService.turndown(comment.contentHTML);
 
         // V3.1: 清理残留语法和多余空行
-        commentContent = cleanupMarkdown(commentContent);
+        // V3.6.0: 传递 keepGif 参数
+        commentContent = cleanupMarkdown(commentContent, config.embedImages && config.imageSkipGif);
         commentContent = commentContent.trim();
 
         if (config.foldComments) {
@@ -695,8 +895,8 @@
     try {
       // 获取配置
       const config = await chrome.storage.sync.get(DEFAULT_CONFIG);
-      console.log('[LinuxDo→Obsidian] 读取到的配置:', config);
-      console.log('[LinuxDo→Obsidian] 目标楼层:', targetPostNumber || '主帖');
+      console.log('[Discourse Saver] 读取到的配置:', config);
+      console.log('[Discourse Saver] 目标楼层:', targetPostNumber || '主帖');
 
       // 提取正文内容
       const extracted = extractContent();
@@ -733,12 +933,18 @@
         ? { ...config, saveComments: true, foldComments: false }
         : config;
 
-      const markdown = convertToMarkdownWithComments(
+      let markdown = convertToMarkdownWithComments(
         contentHTML,
         { title, url, author, topicId },
         comments,
         effectiveConfig
       );
+
+      // V3.6.0: 处理图片嵌入（Base64）
+      if (config.embedImages) {
+        showNotification('正在处理图片嵌入...', 'info');
+        markdown = await processMarkdownImages(markdown, config);
+      }
 
       // 构建文件名：只用标题
       // V3.5.3: 单条评论模式时添加楼层号后缀
@@ -765,10 +971,10 @@
       uri += 'overwrite=true&';
       uri += 'content=' + encodeURIComponent(markdown);
 
-      console.log('[LinuxDo→Obsidian] 生成的URI长度:', uri.length);
-      console.log('[LinuxDo→Obsidian] 文件路径:', filePath);
-      console.log('[LinuxDo→Obsidian] 评论数量:', comments.length);
-      console.log('[LinuxDo→Obsidian] 使用Advanced URI:', config.useAdvancedUri);
+      console.log('[Discourse Saver] 生成的URI长度:', uri.length);
+      console.log('[Discourse Saver] 文件路径:', filePath);
+      console.log('[Discourse Saver] 评论数量:', comments.length);
+      console.log('[Discourse Saver] 使用Advanced URI:', config.useAdvancedUri);
 
       // V3.5: 检查是否需要保存到 Obsidian
       const shouldSaveToObsidian = config.saveToObsidian !== false; // 默认为 true
@@ -779,7 +985,7 @@
 
       if (shouldSaveToObsidian && config.useAdvancedUri) {
         // 始终使用 Advanced URI 插件（更可靠）
-        console.log('[LinuxDo→Obsidian] 使用 Advanced URI 插件（始终模式）');
+        console.log('[Discourse Saver] 使用 Advanced URI 插件（始终模式）');
 
         try {
           await navigator.clipboard.writeText(markdown);
@@ -812,12 +1018,12 @@
             showNotification('已保存到Obsidian', 'success');
           }
         } catch (clipboardError) {
-          console.error('[LinuxDo→Obsidian] 剪贴板写入失败:', clipboardError);
+          console.error('[Discourse Saver] 剪贴板写入失败:', clipboardError);
           showNotification('剪贴板不可用，请手动复制', 'error');
         }
       } else if (shouldSaveToObsidian && uri.length > URI_LENGTH_LIMIT) {
         // 未启用 Advanced URI 但内容过大，弹窗提示安装
-        console.log('[LinuxDo→Obsidian] URI过长 (' + uri.length + ' 字符)，需要 Advanced URI');
+        console.log('[Discourse Saver] URI过长 (' + uri.length + ' 字符)，需要 Advanced URI');
         showAdvancedUriPrompt(markdown, filePath, vaultParam, title, comments.length);
       } else if (shouldSaveToObsidian) {
         // 未启用 Advanced URI 且内容不大，使用普通 URI
@@ -852,7 +1058,7 @@
         config.feishuTableId;
 
       if (feishuConfigComplete) {
-        console.log('[LinuxDo→飞书] 检测到飞书配置，开始同步...');
+        console.log('[Discourse Saver→飞书] 检测到飞书配置，开始同步...');
 
         // V3.5.5: 统一清理URL，移除查询参数和锚点，确保URL一致性
         // 先清理基础URL
@@ -895,7 +1101,7 @@
           }
         }, (response) => {
           if (chrome.runtime.lastError) {
-            console.error('[LinuxDo→飞书] 发送消息失败:', chrome.runtime.lastError);
+            console.error('[Discourse Saver→飞书] 发送消息失败:', chrome.runtime.lastError);
             return;
           }
 
@@ -903,7 +1109,7 @@
             const actionText = response.action === 'updated' ? '已更新' : '已保存';
             showNotification(`飞书${actionText}成功`, 'success');
           } else if (response) {
-            console.error('[LinuxDo→飞书] 保存失败:', response.error);
+            console.error('[Discourse Saver→飞书] 保存失败:', response.error);
             showNotification('飞书保存失败: ' + response.error, 'error');
           }
         });
@@ -915,7 +1121,7 @@
       }
 
     } catch (error) {
-      console.error('[LinuxDo→Obsidian] 保存失败:', error);
+      console.error('[Discourse Saver] 保存失败:', error);
       showNotification('保存失败: ' + error.message, 'error');
     }
   }
@@ -1122,7 +1328,7 @@
   let keyboardListenerAdded = false;
   function setupKeyboardShortcut() {
     if (keyboardListenerAdded) {
-      console.log('[LinuxDo→Obsidian] 快捷键监听器已存在，跳过添加');
+      console.log('[Discourse Saver] 快捷键监听器已存在，跳过添加');
       return;
     }
     keyboardListenerAdded = true;
@@ -1133,7 +1339,7 @@
 
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
         e.preventDefault();
-        console.log('[LinuxDo→Obsidian] 快捷键触发');
+        console.log('[Discourse Saver] 快捷键触发');
         saveToObsidian();
       }
     });
@@ -1148,20 +1354,20 @@
     // 检查插件是否启用
     const config = await chrome.storage.sync.get({ pluginEnabled: true });
     if (!config.pluginEnabled) {
-      console.log('[LinuxDo→Obsidian] 插件已禁用');
+      console.log('[Discourse Saver] 插件已禁用');
       return;
     }
 
     // 检查是否是帖子页面
     if (!isTopicPage()) {
-      console.log('[LinuxDo→Obsidian] 非帖子页面，跳过初始化');
+      console.log('[Discourse Saver] 非帖子页面，跳过初始化');
       return;
     }
 
     // 检查是否已经为当前页面初始化过
     const topicUrl = window.location.pathname;
     if (pluginInitialized && currentTopicUrl === topicUrl) {
-      console.log('[LinuxDo→Obsidian] 当前页面已初始化');
+      console.log('[Discourse Saver] 当前页面已初始化');
       return;
     }
 
@@ -1171,7 +1377,7 @@
 
     pluginInitialized = true;
     currentTopicUrl = topicUrl;
-    console.log('[LinuxDo→Obsidian] 插件已加载 (V3.5.10)');
+    console.log('[Discourse Saver] 插件已加载 (V3.6.0)');
   }
 
   // 页面加载完成后初始化
@@ -1187,7 +1393,7 @@
     const url = location.href;
     if (url !== lastUrl) {
       lastUrl = url;
-      console.log('[LinuxDo→Obsidian] 检测到页面导航:', url);
+      console.log('[Discourse Saver] 检测到页面导航:', url);
       // 页面导航时重置初始化状态，允许重新初始化
       pluginInitialized = false;
       setTimeout(init, 500);

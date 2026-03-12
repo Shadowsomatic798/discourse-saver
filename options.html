@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LinuxDo Saver - 设置</title>
+  <title>Discourse Saver - 设置</title>
   <style>
     * {
       margin: 0;
@@ -316,6 +316,106 @@
       margin-bottom: 0;
     }
 
+    /* 折叠面板样式 */
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 8px 0;
+      user-select: none;
+    }
+
+    .collapsible-header:hover {
+      opacity: 0.8;
+    }
+
+    .collapsible-icon {
+      font-size: 12px;
+      transition: transform 0.2s;
+      color: #666;
+    }
+
+    .collapsible-icon.expanded {
+      transform: rotate(90deg);
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .collapsible-content.expanded {
+      max-height: 500px;
+    }
+
+    .collapsible-inner {
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+
+    .warning-text {
+      font-size: 12px;
+      color: #d97706;
+      background: #fef3c7;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+
+    .custom-sites-list {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+
+    .custom-sites-list:empty::before {
+      content: '暂无自定义站点';
+      display: block;
+      padding: 12px;
+      color: #999;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .site-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+    }
+
+    .site-item:last-child {
+      border-bottom: none;
+    }
+
+    .site-item .site-url {
+      color: #333;
+      word-break: break-all;
+    }
+
+    .site-item .remove-btn {
+      background: none;
+      border: none;
+      color: #dc2626;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .site-item .remove-btn:hover {
+      background: #fef2f2;
+      border-radius: 4px;
+    }
+
     @media (max-width: 560px) {
       body {
         padding: 20px 15px;
@@ -335,8 +435,8 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>LinuxDo Saver</h1>
-      <p>保存帖子到 Obsidian 或飞书多维表格 V3.5.13</p>
+      <h1>Discourse Saver</h1>
+      <p>保存 Discourse 论坛帖子到 Obsidian 或飞书多维表格 V3.6.0</p>
     </div>
 
     <div class="content">
@@ -349,6 +449,28 @@
             <label for="pluginEnabled">启用插件（关闭后链接按钮恢复原功能）</label>
           </div>
           <div class="help-text">关闭后需刷新页面生效</div>
+        </div>
+
+        <!-- 站点设置 -->
+        <div class="section">
+          <div class="section-title">
+            站点设置
+            <span class="badge badge-new">新</span>
+          </div>
+          <div class="help-text" style="margin-bottom: 12px;">
+            插件会自动检测 Discourse 论坛（如 LinuxDo、Meta.discourse.org 等）。<br>
+            如果某个站点未被自动识别，可以手动添加。
+          </div>
+
+          <div class="form-group">
+            <label>自定义站点列表</label>
+            <div id="customSitesList" class="custom-sites-list"></div>
+            <div class="inline-row" style="margin-top: 8px;">
+              <input type="text" id="newSiteInput" placeholder="输入站点域名，如 forum.example.com" style="flex: 1;">
+              <button type="button" class="btn-test" id="addSiteBtn">添加</button>
+            </div>
+            <div class="help-text">已内置支持所有 Discourse 论坛自动检测，仅在检测失败时需要手动添加</div>
+          </div>
         </div>
 
         <!-- 保存目标 -->
@@ -476,6 +598,58 @@
             <input type="checkbox" id="includeImages" checked>
             <label for="includeImages">保留图片链接</label>
           </div>
+
+          <!-- 图片嵌入设置（可折叠） -->
+          <div style="margin-top: 12px;">
+            <div class="collapsible-header" id="imageSettingsHeader">
+              <div class="checkbox-row" style="margin-bottom: 0;">
+                <input type="checkbox" id="embedImages">
+                <label for="embedImages">将图片嵌入笔记（Base64）<span class="badge badge-new">新</span></label>
+              </div>
+              <span class="collapsible-icon" id="imageSettingsIcon">▶</span>
+            </div>
+
+            <div class="collapsible-content" id="imageSettingsContent">
+              <div class="collapsible-inner">
+                <div class="warning-text">
+                  <strong>注意：</strong>启用后图片会以 Base64 格式嵌入 Markdown 文件中。
+                  优点是单文件完整保存，缺点是文件体积会显著增大。
+                </div>
+                <div class="warning-text" style="margin-top: 8px; background: #fff3cd; border-color: #ffc107;">
+                  <strong>⚠️ 重要：</strong>图片嵌入会使文件变大，<strong>必须启用上方的"使用 Advanced URI 插件"</strong>选项才能正常保存到 Obsidian。
+                </div>
+
+                <div class="form-group" style="margin-top: 12px;">
+                  <label>图片最大宽度</label>
+                  <select id="imageMaxWidth" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    <option value="0">原始尺寸（不压缩）</option>
+                    <option value="1920">1920px（推荐，平衡质量与大小）</option>
+                    <option value="1280">1280px（较小文件）</option>
+                    <option value="800">800px（小文件）</option>
+                    <option value="480">480px（极小文件）</option>
+                  </select>
+                  <div class="help-text">超过此宽度的图片会等比例缩小</div>
+                </div>
+
+                <div class="form-group">
+                  <label>图片质量</label>
+                  <select id="imageQuality" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    <option value="1">100%（原始质量）</option>
+                    <option value="0.9">90%（推荐）</option>
+                    <option value="0.8">80%（较小文件）</option>
+                    <option value="0.6">60%（小文件）</option>
+                  </select>
+                  <div class="help-text">降低质量可减小文件体积</div>
+                </div>
+
+                <div class="checkbox-row">
+                  <input type="checkbox" id="imageSkipGif">
+                  <label for="imageSkipGif">跳过 GIF 动图（保留原链接）</label>
+                </div>
+                <div class="help-text" style="margin-left: 24px;">GIF 转换后会失去动画效果</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 评论设置 -->
@@ -521,6 +695,7 @@
     </div>
 
     <div class="footer">
+      <a href="https://meta.discourse.org" target="_blank">Discourse</a> |
       <a href="https://linux.do" target="_blank">LinuxDo</a> |
       <a href="https://obsidian.md" target="_blank">Obsidian</a> |
       <a href="https://www.feishu.cn" target="_blank">飞书</a>

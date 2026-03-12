@@ -1,23 +1,25 @@
 {
   "manifest_version": 3,
-  "name": "LinuxDo to Obsidian",
-  "version": "3.5.13",
-  "description": "一键保存LinuxDo帖子+评论到Obsidian或飞书多维表格（支持Chrome/Edge/Brave/Opera等Chromium浏览器）",
+  "name": "Discourse Saver",
+  "version": "3.6.0",
+  "description": "一键保存Discourse论坛帖子+评论到Obsidian或飞书多维表格（支持LinuxDo及所有Discourse论坛）",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "https://open.feishu.cn/*",
-    "https://open.larksuite.com/*"
+    "https://open.larksuite.com/*",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://linux.do/*"],
-      "js": ["lib/turndown.min.js", "content.js"],
+      "matches": ["<all_urls>"],
+      "js": ["detector.js"],
       "run_at": "document_end"
     }
   ],
