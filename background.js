@@ -1,4 +1,4 @@
-// Discourse Saver - Background Script V4.0.3
+// Discourse Saver - Background Script V4.0.4
 // 处理飞书/Notion API请求（解决CORS问题）+ 动态脚本注入
 // V3.5: 支持上传MD文件作为附件
 // V3.5.2: 支持飞书国内版和Lark国际版
@@ -6,6 +6,7 @@
 // V4.0.1: 新增 Notion Database 保存功能
 // V4.0.2: 修复 Notion 内容换行问题
 // V4.0.3: Notion 支持视频嵌入（YouTube/Bilibili/Vimeo）+ 链接预览（bookmark）
+// V4.0.4: 配合 content.js 修复视频封面重复问题
 // V3.5.4: 版本同步
 // V3.5.5: 修复飞书记录搜索 - 改用标题搜索（超链接字段contains不搜索URL）
 // V3.5.12: 增强飞书测试连接 - 验证必需字段是否存在及类型是否正确

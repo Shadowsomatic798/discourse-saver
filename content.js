@@ -1,4 +1,4 @@
-// Discourse Saver - Content Script V4.0.3
+// Discourse Saver - Content Script V4.0.4
 // 劫持链接按钮，保存帖子+评论到Obsidian（保留颜色样式）
 // V3.5: 支持同时保存到飞书多维表格（带MD附件）
 // V3.5.1: 单击保存到Obsidian，双击触发原生复制链接
@@ -18,6 +18,7 @@
 // V3.6.0: 支持所有 Discourse 论坛 + 自定义站点管理 + 图片 Base64 嵌入
 // V4.0.2: 修复换行丢失问题 - <br>标签现在正确转换为换行符
 // V4.0.3: onebox 链接预览优化 + 在线视频链接自动转 iframe（YouTube/Bilibili/Vimeo）
+// V4.0.4: 修复视频封面重复问题 - 视频链接转iframe时自动删除封面图片，非视频链接保留缩略图
 //
 // 功能说明：
 // - 点击主帖链接按钮：保存主帖（如开启"保存评论"则包含所有评论）
@@ -474,7 +475,105 @@
       }
     });
 
+    // 通用视频链接解析函数 - 支持多平台
+    // 返回 { embedUrl: string, isVideo: boolean, platform: string }
+    function parseVideoUrl(href) {
+      if (!href) return { embedUrl: '', isVideo: false, platform: '' };
+
+      // YouTube 处理
+      const youtubeMatch = href.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+      if (youtubeMatch) {
+        return { embedUrl: 'https://www.youtube.com/embed/' + youtubeMatch[1], isVideo: true, platform: 'youtube' };
+      }
+
+      // Bilibili 处理
+      const bilibiliMatch = href.match(/bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/i);
+      if (bilibiliMatch) {
+        return { embedUrl: 'https://player.bilibili.com/player.html?bvid=' + bilibiliMatch[1] + '&autoplay=0', isVideo: true, platform: 'bilibili' };
+      }
+
+      // Vimeo 处理
+      const vimeoMatch = href.match(/vimeo\.com\/(\d+)/);
+      if (vimeoMatch) {
+        return { embedUrl: 'https://player.vimeo.com/video/' + vimeoMatch[1], isVideo: true, platform: 'vimeo' };
+      }
+
+      // 优酷处理 - v.youku.com/v_show/id_XXXXX.html
+      const youkuMatch = href.match(/youku\.com\/v_show\/id_([a-zA-Z0-9=]+)/i);
+      if (youkuMatch) {
+        return { embedUrl: 'https://player.youku.com/embed/' + youkuMatch[1], isVideo: true, platform: 'youku' };
+      }
+
+      // 抖音处理 - douyin.com/video/XXXXX（不支持 iframe，返回链接格式）
+      const douyinMatch = href.match(/douyin\.com\/video\/(\d+)/);
+      if (douyinMatch) {
+        return { embedUrl: '', isVideo: true, platform: 'douyin', videoId: douyinMatch[1], originalUrl: href };
+      }
+
+      // TikTok处理 - tiktok.com/@user/video/XXXXX
+      const tiktokMatch = href.match(/tiktok\.com\/@[^\/]+\/video\/(\d+)/);
+      if (tiktokMatch) {
+        return { embedUrl: 'https://www.tiktok.com/embed/v2/' + tiktokMatch[1], isVideo: true, platform: 'tiktok' };
+      }
+
+      // X/Twitter 视频处理 - twitter.com/user/status/XXXXX 或 x.com/user/status/XXXXX
+      const twitterMatch = href.match(/(?:twitter\.com|x\.com)\/[^\/]+\/status\/(\d+)/);
+      if (twitterMatch) {
+        // Twitter/X 不支持简单 iframe，返回嵌入代码标记
+        return { embedUrl: '', isVideo: true, platform: 'twitter', tweetId: twitterMatch[1], originalUrl: href };
+      }
+
+      // Facebook 视频处理 - facebook.com/watch/?v=XXXXX 或 fb.watch/XXXXX
+      const fbWatchMatch = href.match(/facebook\.com\/watch\/?\?v=(\d+)/);
+      if (fbWatchMatch) {
+        const encodedUrl = encodeURIComponent(href);
+        return { embedUrl: 'https://www.facebook.com/plugins/video.php?href=' + encodedUrl + '&show_text=false', isVideo: true, platform: 'facebook' };
+      }
+      const fbShortMatch = href.match(/fb\.watch\/([a-zA-Z0-9]+)/);
+      if (fbShortMatch) {
+        const encodedUrl = encodeURIComponent(href);
+        return { embedUrl: 'https://www.facebook.com/plugins/video.php?href=' + encodedUrl + '&show_text=false', isVideo: true, platform: 'facebook' };
+      }
+      // Facebook 视频页面 - facebook.com/xxx/videos/XXXXX
+      const fbVideoMatch = href.match(/facebook\.com\/[^\/]+\/videos\/(\d+)/);
+      if (fbVideoMatch) {
+        const encodedUrl = encodeURIComponent(href);
+        return { embedUrl: 'https://www.facebook.com/plugins/video.php?href=' + encodedUrl + '&show_text=false', isVideo: true, platform: 'facebook' };
+      }
+
+      // 腾讯视频处理 - v.qq.com/x/page/XXXXX.html 或 v.qq.com/x/cover/XXXXX/XXXXX.html
+      const qqVideoMatch = href.match(/v\.qq\.com\/x\/(?:page|cover\/[^\/]+)\/([a-zA-Z0-9]+)\.html/);
+      if (qqVideoMatch) {
+        return { embedUrl: 'https://v.qq.com/txp/iframe/player.html?vid=' + qqVideoMatch[1], isVideo: true, platform: 'qq' };
+      }
+
+      // 西瓜视频处理 - ixigua.com/XXXXX
+      const xiguaMatch = href.match(/ixigua\.com\/(\d+)/);
+      if (xiguaMatch) {
+        return { embedUrl: 'https://www.ixigua.com/iframe/' + xiguaMatch[1], isVideo: true, platform: 'xigua' };
+      }
+
+      return { embedUrl: '', isVideo: false, platform: '' };
+    }
+
+    // 生成视频嵌入输出（iframe 或链接）
+    function generateVideoEmbed(videoInfo, originalUrl) {
+      if (videoInfo.embedUrl) {
+        return '\n\n<iframe src="' + videoInfo.embedUrl + '" style="width:100%; aspect-ratio:16/9;" frameborder="0" allowfullscreen></iframe>\n\n';
+      }
+      // 不支持 iframe 的平台，返回带平台标记的链接
+      if (videoInfo.platform === 'douyin') {
+        return '\n\n**[抖音视频](' + originalUrl + ')**\n\n';
+      }
+      if (videoInfo.platform === 'twitter') {
+        return '\n\n**[X/Twitter](' + originalUrl + ')**\n\n';
+      }
+      return '\n\n' + originalUrl + '\n\n';
+    }
+
     // 规则2.5：处理LinuxDo的onebox（链接预览卡片）- 转换为丰富的引用块格式
+    // V4.0.4: 视频 onebox 直接转 iframe，普通 onebox 显示缩略图
+    // 支持平台：YouTube, Bilibili, Vimeo, 优酷, 抖音, TikTok, X/Twitter, Facebook, 腾讯视频, 西瓜视频
     turndownService.addRule('onebox', {
       filter: (node) => {
         if (node.nodeName !== 'ASIDE') return false;
@@ -482,22 +581,39 @@
         return className.includes('onebox') || className.includes('quote');
       },
       replacement: (content, node) => {
-        // 尝试提取链接和更多信息
         const link = node.querySelector('a[href]');
         if (!link) return '';
 
         const href = link.href;
-        // 提取标题
+
+        // V4.0.4: 检测是否为视频链接，如果是则直接转为 iframe 或特殊格式
+        const videoInfo = parseVideoUrl(href);
+
+        // 如果是视频链接，直接输出 iframe 或链接
+        if (videoInfo.isVideo) {
+          return generateVideoEmbed(videoInfo, href);
+        }
+
+        // 非视频链接：显示完整的 onebox 预览卡片
         const titleEl = node.querySelector('h3, h4, .onebox-title, .title, header');
         const title = titleEl?.textContent?.trim() || link.textContent?.trim() || '链接';
-        // 提取描述
         const descEl = node.querySelector('.onebox-description, .description, p, .excerpt');
         const description = descEl?.textContent?.trim() || '';
 
-        // 构建丰富的引用块格式（不含图片）
+        // 提取缩略图
+        let thumbnailUrl = '';
+        const imgEl = node.querySelector('img[src]');
+        if (imgEl) {
+          thumbnailUrl = imgEl.src;
+        }
+
+        // 构建引用块格式
         let result = '\n\n> **' + title + '**\n';
         if (description) {
           result += '> ' + description.substring(0, 200) + (description.length > 200 ? '...' : '') + '\n';
+        }
+        if (thumbnailUrl) {
+          result += '> ![thumbnail](' + thumbnailUrl + ')\n';
         }
         result += '> 🔗 ' + href + '\n\n';
 
@@ -582,6 +698,83 @@
       }
     });
 
+    // 规则4.5：处理视频缩略图容器（div.video-thumbnail）
+    // V4.0.4: LinuxDo 的视频预览结构是 div.video-thumbnail 包含 a>img
+    // 直接转换为 iframe，跳过缩略图图片
+    turndownService.addRule('videoThumbnailContainer', {
+      filter: (node) => {
+        if (node.nodeName !== 'DIV') return false;
+        const className = node.className || '';
+        return className.includes('video-thumbnail');
+      },
+      replacement: (content, node) => {
+        const link = node.querySelector('a[href]');
+        if (!link) return '';
+        const href = link.href || '';
+
+        // 使用通用视频解析函数
+        const videoInfo = parseVideoUrl(href);
+
+        if (videoInfo.isVideo) {
+          return generateVideoEmbed(videoInfo, href);
+        }
+
+        return '\n\n' + href + '\n\n';
+      }
+    });
+
+    // 规则4.6：删除视频封面缩略图（独立的 img 元素）
+    // V4.0.4: 作为备用规则，处理不在 div.video-thumbnail 内的视频缩略图
+    // 支持平台：YouTube, Bilibili, Vimeo, 优酷, 抖音, TikTok, X/Twitter, Facebook, 腾讯视频, 西瓜视频
+    turndownService.addRule('removeVideoThumbnails', {
+      filter: (node) => {
+        if (node.nodeName !== 'IMG') return false;
+        const className = node.className || '';
+        const parentClassName = node.parentElement?.className || '';
+        const src = node.src || '';
+
+        // 如果父元素已经是 video-thumbnail，跳过（由上面的规则处理）
+        if (parentClassName.includes('video-thumbnail')) return false;
+
+        // 方法1：通过 class 检测（LinuxDo 缓存的视频缩略图）
+        if (className.includes('youtube-thumbnail')) return true;
+        if (className.includes('bilibili-thumbnail') || className.includes('bilibili')) return true;
+        if (className.includes('vimeo-thumbnail') || className.includes('vimeo')) return true;
+        if (className.includes('youku-thumbnail') || className.includes('youku')) return true;
+        if (className.includes('douyin-thumbnail') || className.includes('douyin')) return true;
+        if (className.includes('tiktok-thumbnail') || className.includes('tiktok')) return true;
+        if (className.includes('twitter-thumbnail') || className.includes('twitter')) return true;
+        if (className.includes('facebook-thumbnail') || className.includes('facebook')) return true;
+        if (className.includes('qq-thumbnail') || className.includes('qqvideo')) return true;
+        if (className.includes('xigua-thumbnail') || className.includes('xigua')) return true;
+        // 通用视频缩略图 class
+        if (className.includes('video-thumbnail') || className.includes('video-cover')) return true;
+
+        // 方法2：通过 URL 检测（原始视频平台 CDN）
+        // YouTube
+        if (/(?:img\.youtube\.com|i\.ytimg\.com|i\d?\.ytimg\.com)\/vi\//.test(src)) return true;
+        // Bilibili
+        if (/(?:hdslb\.com|bilivideo\.com|biliimg\.com).*(?:cover|archive|video)/.test(src)) return true;
+        // Vimeo
+        if (/(?:vimeocdn\.com|vumbnail\.com)\/video\//.test(src)) return true;
+        // 优酷
+        if (/(?:ykimg\.com|alicdn\.com).*(?:youku|yk).*(?:cover|snapshot|thumb)/i.test(src)) return true;
+        // 抖音/TikTok
+        if (/(?:douyinpic\.com|tiktokcdn\.com|bytedance\.com).*(?:cover|thumb|image)/i.test(src)) return true;
+        // Twitter/X
+        if (/(?:pbs\.twimg\.com|twimg\.com).*(?:video_thumb|ext_tw_video)/i.test(src)) return true;
+        // Facebook
+        if (/(?:fbcdn\.net|facebook\.com).*(?:video|vthumb)/i.test(src)) return true;
+        // 腾讯视频
+        if (/(?:puui\.qpic\.cn|vpic\.video\.qq\.com).*(?:cover|vcover)/i.test(src)) return true;
+        // 西瓜视频
+        if (/(?:p\d+\.pstatp\.com|sf\d+-cdn-tos\.douyinstatic\.com).*(?:tos-cn|cover)/i.test(src)) return true;
+
+        return false;
+      },
+      replacement: () => ''  // 完全移除视频封面图片
+    });
+
     // 规则5：处理普通图片（非lightbox）
     turndownService.addRule('images', {
       filter: (node) => {
@@ -650,44 +843,27 @@
       }
     });
 
-    // 规则7.1：处理在线视频链接（YouTube、Bilibili、Vimeo）转为 iframe 嵌入
+    // 规则7.1：处理在线视频链接转为 iframe 嵌入
+    // 支持平台：YouTube, Bilibili, Vimeo, 优酷, 抖音, TikTok, X/Twitter, Facebook, 腾讯视频, 西瓜视频
     turndownService.addRule('onlineVideoEmbed', {
       filter: (node) => {
         if (node.nodeName !== 'A') return false;
         const href = node.href || '';
-        // 匹配 YouTube
-        if (/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(href)) return true;
-        // 匹配 Bilibili
-        if (/bilibili\.com\/video\//.test(href)) return true;
-        // 匹配 Vimeo
-        if (/vimeo\.com\/\d+/.test(href)) return true;
-        return false;
+        // 使用通用视频解析函数检测
+        const videoInfo = parseVideoUrl(href);
+        return videoInfo.isVideo;
       },
       replacement: (content, node) => {
         const href = node.href || '';
-        let embedUrl = '';
 
-        // YouTube 处理
-        const youtubeMatch = href.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
-        if (youtubeMatch) {
-          embedUrl = 'https://www.youtube.com/embed/' + youtubeMatch[1];
+        // 使用通用视频解析函数
+        const videoInfo = parseVideoUrl(href);
+
+        if (videoInfo.isVideo) {
+          return generateVideoEmbed(videoInfo, href);
         }
 
-        // Bilibili 处理
-        const bilibiliMatch = href.match(/bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/i);
-        if (bilibiliMatch) {
-          embedUrl = 'https://player.bilibili.com/player.html?bvid=' + bilibiliMatch[1] + '&autoplay=0';
-        }
-
-        // Vimeo 处理
-        const vimeoMatch = href.match(/vimeo\.com\/(\d+)/);
-        if (vimeoMatch) {
-          embedUrl = 'https://player.vimeo.com/video/' + vimeoMatch[1];
-        }
-
-        if (!embedUrl) return '[' + content + '](' + href + ')';
-
-        return '\n\n<iframe src="' + embedUrl + '" style="width:100%; aspect-ratio:16/9;" frameborder="0" allowfullscreen></iframe>\n\n';
+        return '[' + content + '](' + href + ')';
       }
     });
 
