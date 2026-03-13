@@ -637,6 +637,47 @@
       }
     });
 
+    // 规则7.1：处理在线视频链接（YouTube、Bilibili、Vimeo）转为 iframe 嵌入
+    turndownService.addRule('onlineVideoEmbed', {
+      filter: (node) => {
+        if (node.nodeName !== 'A') return false;
+        const href = node.href || '';
+        // 匹配 YouTube
+        if (/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/.test(href)) return true;
+        // 匹配 Bilibili
+        if (/bilibili\.com\/video\//.test(href)) return true;
+        // 匹配 Vimeo
+        if (/vimeo\.com\/\d+/.test(href)) return true;
+        return false;
+      },
+      replacement: (content, node) => {
+        const href = node.href || '';
+        let embedUrl = '';
+
+        // YouTube 处理
+        const youtubeMatch = href.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+        if (youtubeMatch) {
+          embedUrl = 'https://www.youtube.com/embed/' + youtubeMatch[1];
+        }
+
+        // Bilibili 处理
+        const bilibiliMatch = href.match(/bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/i);
+        if (bilibiliMatch) {
+          embedUrl = 'https://player.bilibili.com/player.html?bvid=' + bilibiliMatch[1] + '&autoplay=0';
+        }
+
+        // Vimeo 处理
+        const vimeoMatch = href.match(/vimeo\.com\/(\d+)/);
+        if (vimeoMatch) {
+          embedUrl = 'https://player.vimeo.com/video/' + vimeoMatch[1];
+        }
+
+        if (!embedUrl) return '[' + content + '](' + href + ')';
+
+        return '\n\n<iframe src="' + embedUrl + '" width="700" height="400" frameborder="0" allowfullscreen></iframe>\n\n';
+      }
+    });
+
     // 规则8：移除图片元信息span（仅匹配特定class或纯尺寸信息）
     turndownService.addRule('removeImageMeta', {
       filter: (node) => {
