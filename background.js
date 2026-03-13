@@ -1,10 +1,11 @@
-// Discourse Saver - Background Script V4.0.2
+// Discourse Saver - Background Script V4.0.3
 // 处理飞书/Notion API请求（解决CORS问题）+ 动态脚本注入
 // V3.5: 支持上传MD文件作为附件
 // V3.5.2: 支持飞书国内版和Lark国际版
 // V3.5.3: 配合 content.js 支持评论书签功能
 // V4.0.1: 新增 Notion Database 保存功能
 // V4.0.2: 修复 Notion 内容换行问题
+// V4.0.3: Notion 支持视频嵌入（YouTube/Bilibili/Vimeo）+ 链接预览（bookmark）
 // V3.5.4: 版本同步
 // V3.5.5: 修复飞书记录搜索 - 改用标题搜索（超链接字段contains不搜索URL）
 // V3.5.12: 增强飞书测试连接 - 验证必需字段是否存在及类型是否正确
@@ -917,6 +918,87 @@ function buildNotionPageData(postData, config) {
                 external: {
                   url: imgMatch[1]
                 }
+              }
+            });
+          }
+        } else if (/<iframe[^>]+src="([^"]+)"[^>]*>/i.test(trimmedLine)) {
+          // V4.0.3: 支持 iframe 视频嵌入 (YouTube, Bilibili, Vimeo)
+          const iframeMatch = trimmedLine.match(/<iframe[^>]+src="([^"]+)"[^>]*>/i);
+          if (iframeMatch && iframeMatch[1]) {
+            const embedUrl = iframeMatch[1];
+            // 检测视频平台并转换为原始链接
+            let videoUrl = embedUrl;
+            if (embedUrl.includes('youtube.com/embed/')) {
+              const videoId = embedUrl.match(/youtube\.com\/embed\/([^?&]+)/)?.[1];
+              if (videoId) videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+            } else if (embedUrl.includes('player.bilibili.com')) {
+              const bvid = embedUrl.match(/bvid=([^&]+)/)?.[1];
+              if (bvid) videoUrl = 'https://www.bilibili.com/video/' + bvid;
+            } else if (embedUrl.includes('player.vimeo.com')) {
+              const vimeoId = embedUrl.match(/vimeo\.com\/video\/(\d+)/)?.[1];
+              if (vimeoId) videoUrl = 'https://vimeo.com/' + vimeoId;
+            }
+            children.push({
+              object: 'block',
+              type: 'video',
+              video: {
+                type: 'external',
+                external: {
+                  url: videoUrl
+                }
+              }
+            });
+          }
+        } else if (/^\[.+\]\((https?:\/\/[^)]+)\)$/.test(trimmedLine)) {
+          // V4.0.3: 纯链接行转为 bookmark（链接预览卡片）
+          const linkMatch = trimmedLine.match(/^\[.+\]\((https?:\/\/[^)]+)\)$/);
+          if (linkMatch && linkMatch[1]) {
+            children.push({
+              object: 'block',
+              type: 'bookmark',
+              bookmark: {
+                url: linkMatch[1]
+              }
+            });
+          }
+        } else if (/^> \*\*(.+)\*\*$/.test(trimmedLine)) {
+          // V4.0.3: 引用块标题（onebox 格式）转为 quote block
+          const quoteMatch = trimmedLine.match(/^> \*\*(.+)\*\*$/);
+          if (quoteMatch) {
+            children.push({
+              object: 'block',
+              type: 'quote',
+              quote: {
+                rich_text: [{
+                  text: { content: quoteMatch[1].substring(0, 2000) },
+                  annotations: { bold: true }
+                }]
+              }
+            });
+          }
+        } else if (/^> 🔗\s*(https?:\/\/\S+)$/.test(trimmedLine)) {
+          // V4.0.3: 引用块中的链接行转为 bookmark
+          const urlMatch = trimmedLine.match(/^> 🔗\s*(https?:\/\/\S+)$/);
+          if (urlMatch && urlMatch[1]) {
+            children.push({
+              object: 'block',
+              type: 'bookmark',
+              bookmark: {
+                url: urlMatch[1]
+              }
+            });
+          }
+        } else if (/^>\s+/.test(trimmedLine)) {
+          // V4.0.3: 普通引用行转为 quote block
+          const quoteText = trimmedLine.replace(/^>\s*/, '');
+          if (quoteText && !quoteText.startsWith('![')) {
+            children.push({
+              object: 'block',
+              type: 'quote',
+              quote: {
+                rich_text: [{
+                  text: { content: quoteText.substring(0, 2000) }
+                }]
               }
             });
           }

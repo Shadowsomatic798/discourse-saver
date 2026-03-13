@@ -1,4 +1,4 @@
-// Discourse Saver - Content Script V4.0.2
+// Discourse Saver - Content Script V4.0.3
 // 劫持链接按钮，保存帖子+评论到Obsidian（保留颜色样式）
 // V3.5: 支持同时保存到飞书多维表格（带MD附件）
 // V3.5.1: 单击保存到Obsidian，双击触发原生复制链接
@@ -17,6 +17,7 @@
 // V3.5.13: 增强错误提示 + UI文字更新 + Mac快捷键支持
 // V3.6.0: 支持所有 Discourse 论坛 + 自定义站点管理 + 图片 Base64 嵌入
 // V4.0.2: 修复换行丢失问题 - <br>标签现在正确转换为换行符
+// V4.0.3: onebox 链接预览优化 + 在线视频链接自动转 iframe（YouTube/Bilibili/Vimeo）
 //
 // 功能说明：
 // - 点击主帖链接按钮：保存主帖（如开启"保存评论"则包含所有评论）
@@ -473,7 +474,7 @@
       }
     });
 
-    // 规则2.5：处理LinuxDo的onebox（链接预览卡片）- 转换为简单链接
+    // 规则2.5：处理LinuxDo的onebox（链接预览卡片）- 转换为丰富的引用块格式
     turndownService.addRule('onebox', {
       filter: (node) => {
         if (node.nodeName !== 'ASIDE') return false;
@@ -481,14 +482,33 @@
         return className.includes('onebox') || className.includes('quote');
       },
       replacement: (content, node) => {
-        // 尝试提取链接
+        // 尝试提取链接和更多信息
         const link = node.querySelector('a[href]');
-        if (link) {
-          const href = link.href;
-          const title = link.textContent?.trim() || node.querySelector('h4, h3, .title')?.textContent?.trim() || '链接';
-          return '\n\n[' + title + '](' + href + ')\n\n';
+        if (!link) return '';
+
+        const href = link.href;
+        // 提取标题
+        const titleEl = node.querySelector('h3, h4, .onebox-title, .title, header');
+        const title = titleEl?.textContent?.trim() || link.textContent?.trim() || '链接';
+        // 提取描述
+        const descEl = node.querySelector('.onebox-description, .description, p, .excerpt');
+        const description = descEl?.textContent?.trim() || '';
+        // 提取图片
+        const imgEl = node.querySelector('img.thumbnail, img.onebox-avatar, .onebox-body img');
+        const imgSrc = imgEl?.src || '';
+
+        // 构建丰富的引用块格式
+        let result = '\n\n> **' + title + '**\n';
+        if (description) {
+          result += '> ' + description.substring(0, 200) + (description.length > 200 ? '...' : '') + '\n';
         }
-        return '';
+        result += '> 🔗 ' + href + '\n';
+        if (imgSrc) {
+          result += '> ![](' + imgSrc + ')\n';
+        }
+        result += '\n';
+
+        return result;
       }
     });
 
