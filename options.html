@@ -33,6 +33,7 @@
       color: #fff;
       padding: 24px;
       text-align: center;
+      position: relative;
     }
 
     .header h1 {
@@ -44,6 +45,35 @@
     .header p {
       font-size: 13px;
       opacity: 0.9;
+    }
+
+    .language-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .language-toggle button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .language-toggle button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .language-toggle button.active {
+      background: rgba(255, 255, 255, 0.3);
+      font-weight: 600;
     }
 
     .content {
@@ -471,12 +501,17 @@
       }
     }
   </style>
+  <script src="i18n.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="header">
+      <div class="language-toggle">
+        <button id="lang-zh" class="active" data-lang="zh">中文</button>
+        <button id="lang-en" data-lang="en">English</button>
+      </div>
       <h1>Discourse Saver</h1>
-      <p>保存 Discourse 论坛帖子到 Obsidian 或飞书多维表格 V3.6.0</p>
+      <p data-i18n="header.subtitle">保存 Discourse 论坛帖子到 Obsidian 或飞书多维表格 V3.6.0</p>
     </div>
 
     <div class="content">
@@ -485,16 +520,16 @@
         <div class="section" data-section="pluginStatus">
           <div class="section-header" data-section="pluginStatus">
             <div class="section-header-left">
-              <span class="section-title">插件状态</span>
+              <span class="section-title" data-i18n="sections.pluginStatus">插件状态</span>
             </div>
             <span class="collapse-icon expanded" id="icon-pluginStatus">▶</span>
           </div>
           <div class="section-content expanded" id="content-pluginStatus">
             <div class="checkbox-row">
               <input type="checkbox" id="pluginEnabled" checked>
-              <label for="pluginEnabled">启用插件（关闭后链接按钮恢复原功能）</label>
+              <label for="pluginEnabled" data-i18n="pluginStatus.enabled">启用插件（关闭后链接按钮恢复原功能）</label>
             </div>
-            <div class="help-text">关闭后需刷新页面生效</div>
+            <div class="help-text" data-i18n="pluginStatus.help">关闭后需刷新页面生效</div>
           </div>
         </div>
 
@@ -502,7 +537,7 @@
         <div class="section" data-section="siteSettings">
           <div class="section-header" data-section="siteSettings">
             <div class="section-header-left">
-              <span class="section-title">站点设置 <span class="badge badge-new">新</span></span>
+              <span class="section-title" data-i18n="sections.siteSettings">站点设置 <span class="badge badge-new">新</span></span>
             </div>
             <span class="collapse-icon expanded" id="icon-siteSettings">▶</span>
           </div>
@@ -513,7 +548,7 @@
             </div>
 
             <div class="form-group">
-              <label>自定义站点列表</label>
+              <label data-i18n="siteSettings.customSites">自定义站点列表</label>
               <div id="customSitesList" class="custom-sites-list"></div>
               <div class="inline-row" style="margin-top: 8px;">
                 <input type="text" id="newSiteInput" placeholder="输入站点域名，如 forum.example.com" style="flex: 1;">
@@ -528,7 +563,7 @@
         <div class="section" data-section="saveTarget">
           <div class="section-header" data-section="saveTarget">
             <div class="section-header-left">
-              <span class="section-title">保存目标</span>
+              <span class="section-title" data-i18n="sections.saveTarget">保存目标</span>
             </div>
             <span class="collapse-icon expanded" id="icon-saveTarget">▶</span>
           </div>
@@ -557,19 +592,19 @@
           <div class="section-header" data-section="obsidianSettings">
             <div class="section-header-left">
               <span class="badge badge-obsidian">Obsidian</span>
-              <span class="section-title">Obsidian 设置</span>
+              <span class="section-title" data-i18n="sections.obsidian">Obsidian 设置</span>
             </div>
             <span class="collapse-icon expanded" id="icon-obsidianSettings">▶</span>
           </div>
           <div class="section-content expanded" id="content-obsidianSettings">
             <div class="form-group">
-              <label>Vault 名称</label>
+              <label data-i18n="obsidian.vaultName">Vault 名称</label>
               <input type="text" id="vaultName" placeholder="留空自动使用当前打开的仓库">
               <div class="help-text">推荐留空，会自动保存到当前打开的 Obsidian 仓库</div>
             </div>
 
             <div class="form-group">
-              <label>保存文件夹</label>
+              <label data-i18n="obsidian.folder">保存文件夹</label>
               <input type="text" id="folderPath" value="LinuxDo收集箱" placeholder="LinuxDo收集箱">
               <div class="help-text">文件夹不存在会自动创建</div>
             </div>
@@ -589,14 +624,14 @@
           <div class="section-header" data-section="feishuSettings">
             <div class="section-header-left">
               <span class="badge badge-feishu">飞书</span>
-              <span class="section-title">飞书多维表格设置</span>
+              <span class="section-title" data-i18n="sections.feishu">飞书多维表格设置</span>
             </div>
             <span class="collapse-icon expanded" id="icon-feishuSettings">▶</span>
           </div>
           <div class="section-content expanded" id="content-feishuSettings">
             <div id="feishuOptions">
               <div class="form-group">
-                <label>API 版本</label>
+                <label data-i18n="feishu.version">API 版本</label>
                 <select id="feishuApiDomain">
                   <option value="feishu">飞书国内版 (feishu.cn)</option>
                   <option value="lark">Lark 国际版 (larksuite.com)</option>
@@ -605,28 +640,28 @@
               </div>
 
               <div class="form-group">
-                <label>App ID</label>
+                <label data-i18n="feishu.appId">App ID</label>
                 <input type="text" id="feishuAppId" placeholder="cli_xxxxxxxxxxxxxxxx">
                 <div class="help-text">在飞书开放平台创建应用获取</div>
               </div>
 
               <div class="form-group">
-                <label>App Secret</label>
+                <label data-i18n="feishu.appSecret">App Secret</label>
                 <input type="password" id="feishuAppSecret" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
               </div>
 
               <div class="form-group">
-                <label>多维表格 app_token</label>
+                <label data-i18n="feishu.appToken">多维表格 app_token</label>
                 <input type="text" id="feishuAppToken" placeholder="bascnxxxxxxxxxxxxxxxx">
                 <div class="help-text">从多维表格 URL 中获取：feishu.cn/base/<strong>bascnxxx</strong>?table=...</div>
               </div>
 
               <div class="inline-row">
                 <div class="form-group">
-                  <label>数据表 table_id</label>
+                  <label data-i18n="feishu.tableId">数据表 table_id</label>
                   <input type="text" id="feishuTableId" placeholder="tblxxxxxxxxxxxxxxxx">
                 </div>
-                <button type="button" class="btn-test" id="testFeishuBtn">测试连接</button>
+                <button type="button" class="btn-test" id="testFeishuBtn"data-i18n="buttons.testConnection">测试连接</button>
               </div>
               <div class="help-text">从 URL 中获取：?table=<strong>tblxxx</strong>&view=...</div>
 
@@ -660,7 +695,7 @@
           <div class="section-header" data-section="notionSettings">
             <div class="section-header-left">
               <span class="badge badge-notion">Notion</span>
-              <span class="section-title">Notion Database 设置 <span class="badge badge-new">新</span></span>
+              <span class="section-title" data-i18n="sections.notion">Notion Database 设置 <span class="badge badge-new">新</span></span>
             </div>
             <span class="collapse-icon expanded" id="icon-notionSettings">▶</span>
           </div>
@@ -713,7 +748,7 @@
               </div>
 
               <div class="inline-row" style="margin-top: 12px;">
-                <button type="button" class="btn-test" id="testNotionBtn">测试连接</button>
+                <button type="button" class="btn-test" id="testNotionBtn"data-i18n="buttons.testConnection">测试连接</button>
               </div>
 
               <div class="tip-box" style="margin-top: 16px; background: #f0f9ff; border-left-color: #0ea5e9;">
@@ -739,14 +774,14 @@
         <div class="section" data-section="contentSettings">
           <div class="section-header" data-section="contentSettings">
             <div class="section-header-left">
-              <span class="section-title">内容设置</span>
+              <span class="section-title" data-i18n="sections.content">内容设置</span>
             </div>
             <span class="collapse-icon expanded" id="icon-contentSettings">▶</span>
           </div>
           <div class="section-content expanded" id="content-contentSettings">
             <div class="checkbox-row">
               <input type="checkbox" id="addMetadata" checked>
-              <label for="addMetadata">添加元数据（来源、作者、时间等）</label>
+              <label for="addMetadata" data-i18n="content.addMetadata">添加元数据（来源、作者、时间等）</label>
             </div>
 
             <div class="checkbox-row">
@@ -770,7 +805,7 @@
               </div>
 
               <div class="form-group" style="margin-top: 12px;">
-                <label>图片最大宽度</label>
+                <label data-i18n="content.maxWidth">图片最大宽度</label>
                 <select id="imageMaxWidth">
                   <option value="0">原始尺寸（不压缩）</option>
                   <option value="1920">1920px（推荐，平衡质量与大小）</option>
@@ -782,7 +817,7 @@
               </div>
 
               <div class="form-group">
-                <label>图片质量</label>
+                <label data-i18n="content.quality">图片质量</label>
                 <select id="imageQuality">
                   <option value="1">100%（原始质量）</option>
                   <option value="0.9">90%（推荐）</option>
@@ -805,14 +840,14 @@
         <div class="section" data-section="commentSettings">
           <div class="section-header" data-section="commentSettings">
             <div class="section-header-left">
-              <span class="section-title">评论设置</span>
+              <span class="section-title" data-i18n="sections.comments">评论设置</span>
             </div>
             <span class="collapse-icon expanded" id="icon-commentSettings">▶</span>
           </div>
           <div class="section-content expanded" id="content-commentSettings">
             <div class="checkbox-row">
               <input type="checkbox" id="saveComments">
-              <label for="saveComments">保存评论区</label>
+              <label for="saveComments" data-i18n="comments.saveComments">保存评论区</label>
             </div>
 
             <div id="commentOptions" class="sub-options disabled">
@@ -831,7 +866,7 @@
         </div>
 
         <div class="button-group">
-          <button type="submit" class="btn-save">保存设置</button>
+          <button type="submit" class="btn-save"data-i18n="buttons.save">保存设置</button>
           <button type="button" class="btn-reset" id="resetBtn">恢复默认</button>
         </div>
 

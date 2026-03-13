@@ -558,6 +558,13 @@ function showStatus(message, type) {
 document.addEventListener('DOMContentLoaded', () => {
   loadOptions();
 
+  // 初始化语言设置
+  initLanguage();
+
+  // 语言切换按钮事件
+  document.getElementById('lang-zh').addEventListener('click', () => setLanguage('zh'));
+  document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+
   // 绑定折叠/展开事件（使用事件监听器，避免 Chrome 扩展 CSP 限制）
   document.querySelectorAll('.section-header[data-section]').forEach(header => {
     header.addEventListener('click', () => {
