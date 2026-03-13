@@ -2,7 +2,7 @@
 const i18n = {
   zh: {
     header: {
-      subtitle: '保存 Discourse 论坛帖子到 Obsidian、飞书或 Notion V4.0.2'
+      subtitle: '保存 Discourse 论坛帖子到 Obsidian、飞书或 Notion V4.0.3'
     },
     sections: {
       pluginStatus: '插件状态',
@@ -135,7 +135,7 @@ const i18n = {
   },
   en: {
     header: {
-      subtitle: 'Save Discourse Forum Posts to Obsidian, Feishu or Notion V4.0.2'
+      subtitle: 'Save Discourse Forum Posts to Obsidian, Feishu or Notion V4.0.3'
     },
     sections: {
       pluginStatus: 'Plugin Status',
