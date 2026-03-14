@@ -918,11 +918,33 @@ function formatNotionDatabaseId(id) {
 }
 
 // V4.2.3: 搜索 Notion 现有记录（通过 URL 查找）
+// V4.2.3: 规范化 URL（移除末尾斜杠、统一协议等）
+function normalizeUrl(url) {
+  if (!url) return url;
+  let normalized = url.trim();
+  // 移除末尾斜杠
+  normalized = normalized.replace(/\/+$/, '');
+  // 移除常见的追踪参数
+  try {
+    const urlObj = new URL(normalized);
+    // 移除一些常见的追踪参数，但保留重要的参数
+    const paramsToRemove = ['utm_source', 'utm_medium', 'utm_campaign', 'ref', 'source'];
+    paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
+    // 如果没有其他参数了，移除问号
+    normalized = urlObj.toString();
+  } catch (e) {
+    // URL 解析失败，返回原始值
+  }
+  return normalized;
+}
+
 async function searchNotionRecord(token, databaseId, url, urlPropName) {
-  console.log('[Discourse Saver→Notion] 搜索现有记录，URL:', url);
+  const normalizedUrl = normalizeUrl(url);
+  console.log('[Discourse Saver→Notion] 搜索现有记录，URL:', normalizedUrl);
 
   try {
-    const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+    // 先尝试精确匹配
+    let response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -933,22 +955,78 @@ async function searchNotionRecord(token, databaseId, url, urlPropName) {
         filter: {
           property: urlPropName,
           url: {
-            equals: url
+            equals: normalizedUrl
           }
         },
         page_size: 1
       })
     });
 
-    if (!response.ok) {
-      console.warn('[Discourse Saver→Notion] 搜索失败:', response.status);
-      return null;
+    if (response.ok) {
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        console.log('[Discourse Saver→Notion] 找到现有记录（精确匹配）:', data.results[0].id);
+        return data.results[0];
+      }
     }
 
-    const data = await response.json();
-    if (data.results && data.results.length > 0) {
-      console.log('[Discourse Saver→Notion] 找到现有记录:', data.results[0].id);
-      return data.results[0];
+    // 如果精确匹配失败，尝试带末尾斜杠的 URL
+    const urlWithSlash = normalizedUrl + '/';
+    response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Notion-Version': NOTION_API_VERSION,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        filter: {
+          property: urlPropName,
+          url: {
+            equals: urlWithSlash
+          }
+        },
+        page_size: 1
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        console.log('[Discourse Saver→Notion] 找到现有记录（带斜杠）:', data.results[0].id);
+        return data.results[0];
+      }
+    }
+
+    // 如果原始 URL 有查询参数，也尝试不带参数的版本
+    if (url.includes('?')) {
+      const urlWithoutParams = url.split('?')[0].replace(/\/+$/, '');
+      response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Notion-Version': NOTION_API_VERSION,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          filter: {
+            property: urlPropName,
+            url: {
+              contains: urlWithoutParams
+            }
+          },
+          page_size: 5
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // 找到包含该 URL 的记录，返回第一个
+        if (data.results && data.results.length > 0) {
+          console.log('[Discourse Saver→Notion] 找到现有记录（模糊匹配）:', data.results[0].id);
+          return data.results[0];
+        }
+      }
     }
 
     console.log('[Discourse Saver→Notion] 未找到现有记录');
@@ -959,38 +1037,60 @@ async function searchNotionRecord(token, databaseId, url, urlPropName) {
   }
 }
 
-// V4.2.3: 删除 Notion 页面的所有子块
+// V4.2.3: 删除 Notion 页面的所有子块（支持分页）
 async function deleteNotionPageChildren(token, pageId) {
+  let totalDeleted = 0;
+  let hasMore = true;
+  let startCursor = undefined;
+
   try {
-    // 获取所有子块
-    const response = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Notion-Version': NOTION_API_VERSION
+    while (hasMore) {
+      // 获取子块（分页）
+      let url = `https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`;
+      if (startCursor) {
+        url += `&start_cursor=${startCursor}`;
       }
-    });
 
-    if (!response.ok) return;
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Notion-Version': NOTION_API_VERSION
+        }
+      });
 
-    const data = await response.json();
-    const blocks = data.results || [];
+      if (!response.ok) {
+        console.warn('[Discourse Saver→Notion] 获取子块失败:', response.status);
+        break;
+      }
 
-    // 逐个删除
-    for (const block of blocks) {
-      try {
-        await fetch(`https://api.notion.com/v1/blocks/${block.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Notion-Version': NOTION_API_VERSION
-          }
-        });
-      } catch (e) {
-        console.warn('[Discourse Saver→Notion] 删除块失败:', e);
+      const data = await response.json();
+      const blocks = data.results || [];
+      hasMore = data.has_more;
+      startCursor = data.next_cursor;
+
+      // 逐个删除
+      for (const block of blocks) {
+        try {
+          await fetch(`https://api.notion.com/v1/blocks/${block.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Notion-Version': NOTION_API_VERSION
+            }
+          });
+          totalDeleted++;
+        } catch (e) {
+          console.warn('[Discourse Saver→Notion] 删除块失败:', e);
+        }
+      }
+
+      // 防止请求过快
+      if (hasMore) {
+        await new Promise(r => setTimeout(r, 100));
       }
     }
 
-    console.log(`[Discourse Saver→Notion] 已删除 ${blocks.length} 个旧块`);
+    console.log(`[Discourse Saver→Notion] 已删除 ${totalDeleted} 个旧块`);
   } catch (error) {
     console.warn('[Discourse Saver→Notion] 删除子块异常:', error);
   }
@@ -1062,25 +1162,8 @@ async function updateNotionPage(token, pageId, pageData) {
 function preprocessMarkdownText(text) {
   let processed = text;
 
-  // 0. 处理 Discourse 风格的 admonition 块
-  // 格式: > **warning**\n> 内容\n> 更多内容
-  // 转换为: > [!WARNING] 内容 更多内容
-  const admonitionTypes = ['warning', 'note', 'info', 'tip', 'important', 'caution', 'danger', 'success'];
-  const admonitionRegex = new RegExp(
-    `^>\\s*\\*\\*(${admonitionTypes.join('|')})\\*\\*\\s*$([\\s\\S]*?)(?=^(?!>)|$)`,
-    'gmi'
-  );
-  processed = processed.replace(admonitionRegex, (match, type, content) => {
-    // 提取所有引用行的内容
-    const lines = content.split('\n')
-      .filter(line => line.trim().startsWith('>') || line.trim() === '')
-      .map(line => line.replace(/^>\s*/, '').trim())
-      .filter(line => line !== '');
-    const combinedContent = lines.join(' ');
-    // 转换为标准格式
-    const normalizedType = type.toUpperCase();
-    return `> [!${normalizedType}] ${combinedContent}`;
-  });
+  // 0. 不再在这里处理 Discourse 风格的 admonition 块
+  // 改为在 buildNotionPageData 中作为多行块处理
 
   // 1. 处理图片链接 [![alt](img-url)](link-url) -> [alt](link-url)
   // 这种格式是可点击的图片，转换为普通链接
@@ -1335,13 +1418,39 @@ function buildNotionPageData(postData, config) {
     };
   }
 
-  // Category (分类) - rich_text 类型
+  // Category (分类) - V4.2.4: 支持多分类，用 # 分隔
+  // 支持 rich_text、select、multi_select 类型
   if (config.notionPropCategory && postData.category) {
-    properties[config.notionPropCategory] = {
-      rich_text: [{
-        text: { content: postData.category.substring(0, 2000) }
-      }]
-    };
+    // 处理多分类：支持逗号、斜杠、空格分隔的输入
+    const categoryInput = postData.category.toString().trim();
+    // 分割并清理分类
+    const categories = categoryInput
+      .split(/[,，\/、\s]+/)  // 支持逗号、中文逗号、斜杠、顿号、空格分隔
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
+
+    if (categories.length > 0) {
+      // 根据配置的属性类型选择格式
+      if (config.notionCategoryType === 'multi_select') {
+        // multi_select 类型：创建多个选项
+        properties[config.notionPropCategory] = {
+          multi_select: categories.slice(0, 10).map(c => ({ name: c.substring(0, 100) }))
+        };
+      } else if (config.notionCategoryType === 'select') {
+        // select 类型：只取第一个分类
+        properties[config.notionPropCategory] = {
+          select: { name: categories[0].substring(0, 100) }
+        };
+      } else {
+        // rich_text 类型（默认）：用 # 分隔显示所有分类
+        const formattedCategories = categories.join(' # ');
+        properties[config.notionPropCategory] = {
+          rich_text: [{
+            text: { content: formattedCategories.substring(0, 2000) }
+          }]
+        };
+      }
+    }
   }
 
   // Saved Date (保存日期) - date 类型
@@ -1384,20 +1493,185 @@ function buildNotionPageData(postData, config) {
       return placeholder;
     });
 
-    // 先按双换行拆分成段落块，再按单换行拆分成行
-    // 这样确保所有换行都能在 Notion 中正确显示
-    const paragraphs = preprocessedContent.split('\n\n');
+    // V4.2.4: 改进的多行块收集和处理逻辑
+    // 先收集所有行，然后按块类型分组处理
+    const allLines = preprocessedContent.split('\n');
 
-    for (const para of paragraphs) {
-      if (blockCount >= maxBlocks) break;
+    // 辅助函数：解析 callout 类型和配置
+    const getCalloutConfig = (typeLine) => {
+      const admonitionTypes = ['warning', 'note', 'info', 'tip', 'important', 'caution', 'danger', 'success'];
+      // 检查 Discourse 风格: > **warning**
+      const discourseMatch = typeLine.match(/^>\s*\*\*(\w+)\*\*\s*$/i);
+      if (discourseMatch && admonitionTypes.includes(discourseMatch[1].toLowerCase())) {
+        return discourseMatch[1].toUpperCase();
+      }
+      // 检查 GitHub 风格: > [!WARNING]
+      const githubMatch = typeLine.match(/^>\s*\[!(WARNING|NOTE|INFO|TIP|IMPORTANT|CAUTION|DANGER|SUCCESS)\]/i);
+      if (githubMatch) {
+        return githubMatch[1].toUpperCase();
+      }
+      return null;
+    };
+
+    // 辅助函数：获取 callout 配置（emoji和颜色）
+    const getCalloutStyle = (type) => {
+      const typeConfig = {
+        'WARNING': { emoji: '⚠️', color: 'yellow_background' },
+        'NOTE': { emoji: '📝', color: 'blue_background' },
+        'TIP': { emoji: '💡', color: 'green_background' },
+        'IMPORTANT': { emoji: '❗', color: 'red_background' },
+        'CAUTION': { emoji: '⛔', color: 'orange_background' },
+        'INFO': { emoji: 'ℹ️', color: 'blue_background' },
+        'DANGER': { emoji: '🚨', color: 'red_background' },
+        'SUCCESS': { emoji: '✅', color: 'green_background' }
+      };
+      return typeConfig[type] || { emoji: '💡', color: 'gray_background' };
+    };
+
+    // 辅助函数：处理多行 callout 内容
+    const processCalloutLines = (lines, calloutType) => {
+      const style = getCalloutStyle(calloutType);
+      const contentLines = [];
+      const childrenBlocks = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        let lineContent = lines[i].replace(/^>\s*/, '').trim();
+        // 跳过类型标识行
+        if (i === 0 && (lineContent.match(/^\*\*\w+\*\*$/) || lineContent.match(/^\[!\w+\]/))) {
+          continue;
+        }
+        if (!lineContent) continue;
+
+        // 检查是否是列表项
+        if (lineContent.startsWith('- ') || lineContent.startsWith('* ')) {
+          // 如果有累积的内容，先添加为段落
+          if (contentLines.length > 0) {
+            childrenBlocks.push({
+              object: 'block',
+              type: 'paragraph',
+              paragraph: {
+                rich_text: parseMarkdownToRichText(contentLines.join(' '))
+              }
+            });
+            contentLines.length = 0;
+          }
+          // 添加列表项
+          childrenBlocks.push({
+            object: 'block',
+            type: 'bulleted_list_item',
+            bulleted_list_item: {
+              rich_text: parseMarkdownToRichText(lineContent.substring(2))
+            }
+          });
+        } else if (/^\d+\.\s/.test(lineContent)) {
+          // 有序列表
+          if (contentLines.length > 0) {
+            childrenBlocks.push({
+              object: 'block',
+              type: 'paragraph',
+              paragraph: {
+                rich_text: parseMarkdownToRichText(contentLines.join(' '))
+              }
+            });
+            contentLines.length = 0;
+          }
+          childrenBlocks.push({
+            object: 'block',
+            type: 'numbered_list_item',
+            numbered_list_item: {
+              rich_text: parseMarkdownToRichText(lineContent.replace(/^\d+\.\s/, ''))
+            }
+          });
+        } else {
+          // 普通内容行
+          contentLines.push(lineContent);
+        }
+      }
+
+      // 处理剩余内容
+      if (contentLines.length > 0) {
+        childrenBlocks.push({
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: parseMarkdownToRichText(contentLines.join(' '))
+          }
+        });
+      }
+
+      // 创建 callout 块
+      // 如果只有一个简单段落，直接放在 callout 的 rich_text 中
+      // 如果有多个块或列表，使用 children
+      if (childrenBlocks.length === 1 && childrenBlocks[0].type === 'paragraph') {
+        return {
+          object: 'block',
+          type: 'callout',
+          callout: {
+            rich_text: childrenBlocks[0].paragraph.rich_text,
+            icon: { type: 'emoji', emoji: style.emoji },
+            color: style.color
+          }
+        };
+      } else if (childrenBlocks.length > 0) {
+        // Notion callout 支持 children，但需要分开处理
+        // 第一段作为 callout 的主内容
+        const firstContent = childrenBlocks[0].type === 'paragraph'
+          ? childrenBlocks[0].paragraph.rich_text
+          : [{ type: 'text', text: { content: calloutType } }];
+
+        return {
+          object: 'block',
+          type: 'callout',
+          callout: {
+            rich_text: firstContent,
+            icon: { type: 'emoji', emoji: style.emoji },
+            color: style.color,
+            children: childrenBlocks.slice(1)
+          }
+        };
+      } else {
+        return {
+          object: 'block',
+          type: 'callout',
+          callout: {
+            rich_text: [{ type: 'text', text: { content: calloutType } }],
+            icon: { type: 'emoji', emoji: style.emoji },
+            color: style.color
+          }
+        };
+      }
+    };
+
+    // 辅助函数：处理表格行（解析内部的markdown）
+    const processTableRow = (row) => {
+      // 解析表格单元格中的链接等markdown格式
+      const cells = row.split('|').filter(cell => cell.trim());
+      const processedCells = cells.map(cell => {
+        const trimmedCell = cell.trim();
+        // 解析链接 [text](url)
+        return trimmedCell.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1');
+      });
+      return processedCells.join(' | ');
+    };
+
+    // 遍历所有行，收集块
+    let i = 0;
+    while (i < allLines.length && blockCount < maxBlocks) {
+      const line = allLines[i];
+      const trimmedLine = line.trim();
+
+      // 跳过空行
+      if (!trimmedLine) {
+        i++;
+        continue;
+      }
 
       // 检查是否是代码块占位符
-      const codeBlockMatch = para.trim().match(/^__CODE_BLOCK_(\d+)__$/);
+      const codeBlockMatch = trimmedLine.match(/^__CODE_BLOCK_(\d+)__$/);
       if (codeBlockMatch) {
         const codeIndex = parseInt(codeBlockMatch[1]);
         const codeData = codeBlocks[codeIndex];
         if (codeData) {
-          // V4.2.3: 创建 Notion 原生代码块
           children.push({
             object: 'block',
             type: 'code',
@@ -1411,376 +1685,260 @@ function buildNotionPageData(postData, config) {
           });
           blockCount++;
         }
+        i++;
         continue;
       }
 
-      // 按单换行拆分每个段落块
-      const lines = para.split('\n');
+      // 检查是否是多行引用块的开始（可能是callout）
+      if (trimmedLine.startsWith('>')) {
+        const quoteLines = [trimmedLine];
+        let j = i + 1;
+        // 收集所有连续的引用行
+        while (j < allLines.length && allLines[j].trim().startsWith('>')) {
+          quoteLines.push(allLines[j].trim());
+          j++;
+        }
 
-      for (const line of lines) {
-        if (blockCount >= maxBlocks) break;
+        // 检查是否是 callout 类型
+        const calloutType = getCalloutConfig(quoteLines[0]);
+        if (calloutType) {
+          // 创建 callout 块
+          const calloutBlock = processCalloutLines(quoteLines, calloutType);
+          children.push(calloutBlock);
+          blockCount++;
+        } else {
+          // 普通引用块 - 合并所有引用内容
+          const quoteContent = quoteLines
+            .map(l => l.replace(/^>\s*/, '').trim())
+            .filter(l => l)
+            .join(' ');
+          if (quoteContent) {
+            children.push({
+              object: 'block',
+              type: 'quote',
+              quote: {
+                rich_text: parseMarkdownToRichText(quoteContent)
+              }
+            });
+            blockCount++;
+          }
+        }
+        i = j;
+        continue;
+      }
 
-        const trimmedLine = line.trim();
-        if (!trimmedLine) continue; // 跳过空行
+      // 检查是否是表格行
+      if (/^\|.+\|$/.test(trimmedLine)) {
+        const tableLines = [trimmedLine];
+        let j = i + 1;
+        // 收集所有连续的表格行
+        while (j < allLines.length && /^\|.+\|$/.test(allLines[j].trim())) {
+          tableLines.push(allLines[j].trim());
+          j++;
+        }
 
-        // 检查是否是标题（以 # 开头）
-        if (trimmedLine.startsWith('# ')) {
-          children.push({
-            object: 'block',
-            type: 'heading_1',
-            heading_1: {
-              rich_text: [{
-                text: { content: trimmedLine.substring(2).substring(0, 2000) }
-              }]
-            }
-          });
-        } else if (trimmedLine.startsWith('## ')) {
-          children.push({
-            object: 'block',
-            type: 'heading_2',
-            heading_2: {
-              rich_text: [{
-                text: { content: trimmedLine.substring(3).substring(0, 2000) }
-              }]
-            }
-          });
-        } else if (trimmedLine.startsWith('### ')) {
-          children.push({
-            object: 'block',
-            type: 'heading_3',
-            heading_3: {
-              rich_text: [{
-                text: { content: trimmedLine.substring(4).substring(0, 2000) }
-              }]
-            }
-          });
-        } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
-          // V4.0.2+V4.2.3: 支持无序列表（含链接解析）
-          const listText = trimmedLine.substring(2);
-          children.push({
-            object: 'block',
-            type: 'bulleted_list_item',
-            bulleted_list_item: {
-              rich_text: parseMarkdownToRichText(listText)
-            }
-          });
-        } else if (/^\d+\.\s/.test(trimmedLine)) {
-          // V4.0.2+V4.2.3: 支持有序列表（含链接解析）
-          const listContent = trimmedLine.replace(/^\d+\.\s/, '');
-          children.push({
-            object: 'block',
-            type: 'numbered_list_item',
-            numbered_list_item: {
-              rich_text: parseMarkdownToRichText(listContent)
-            }
-          });
-        } else if (/^\|.+\|$/.test(trimmedLine)) {
-          // V4.2.3: Markdown 表格行转为代码块（保持表格格式）
-          // 跳过表格分隔行 |---|---|
-          if (!/^\|[\s-:|]+\|$/.test(trimmedLine)) {
+        // 处理表格 - 跳过分隔行，解析内容行
+        for (const tableLine of tableLines) {
+          if (!/^\|[\s-:|]+\|$/.test(tableLine)) {
+            // 解析表格单元格中的markdown
+            const processedRow = processTableRow(tableLine);
             children.push({
               object: 'block',
               type: 'paragraph',
               paragraph: {
-                rich_text: [{
-                  type: 'text',
-                  text: { content: trimmedLine.substring(0, 2000) },
-                  annotations: { code: true }
-                }]
+                rich_text: parseMarkdownToRichText(processedRow)
               }
             });
+            blockCount++;
+            if (blockCount >= maxBlocks) break;
           }
-        } else if (/^>\s*\[!(WARNING|NOTE|TIP|IMPORTANT|CAUTION|INFO|DANGER|SUCCESS)\]/i.test(trimmedLine) || /^>\s*[⚠️📝💡❗⛔🔔✅ℹ️]/u.test(trimmedLine)) {
-          // V4.2.3: 警告/提示框转为 Notion callout 块（带背景色）
-          // 支持 Discourse 风格: > **warning** 和 GitHub 风格: > [!WARNING]
-          const calloutMatch = trimmedLine.match(/^>\s*\[!(WARNING|NOTE|TIP|IMPORTANT|CAUTION|INFO|DANGER|SUCCESS)\]\s*(.*)/i);
-          const emojiMatch = trimmedLine.match(/^>\s*([⚠️📝💡❗⛔🔔✅ℹ️])\s*(.*)/u);
+        }
+        i = j;
+        continue;
+      }
 
-          let emoji = '💡';
-          let color = 'gray_background';
-          let content = trimmedLine.replace(/^>\s*/, '');
-
-          if (calloutMatch) {
-            const type = calloutMatch[1].toUpperCase();
-            content = calloutMatch[2] || '';
-            // 根据类型设置 emoji 和背景色（Discourse + GitHub 风格）
-            const typeConfig = {
-              'WARNING': { emoji: '⚠️', color: 'yellow_background' },
-              'NOTE': { emoji: '📝', color: 'blue_background' },
-              'TIP': { emoji: '💡', color: 'green_background' },
-              'IMPORTANT': { emoji: '❗', color: 'red_background' },
-              'CAUTION': { emoji: '⛔', color: 'orange_background' },
-              'INFO': { emoji: 'ℹ️', color: 'blue_background' },
-              'DANGER': { emoji: '🚨', color: 'red_background' },
-              'SUCCESS': { emoji: '✅', color: 'green_background' }
-            };
-            if (typeConfig[type]) {
-              emoji = typeConfig[type].emoji;
-              color = typeConfig[type].color;
-            }
-          } else if (emojiMatch) {
-            emoji = emojiMatch[1];
-            content = emojiMatch[2] || '';
-            // 根据 emoji 设置背景色
-            const emojiConfig = {
-              '⚠️': 'yellow_background',
-              '📝': 'blue_background',
-              '💡': 'green_background',
-              '❗': 'red_background',
-              '⛔': 'orange_background',
-              '✅': 'green_background',
-              'ℹ️': 'blue_background',
-              '🔔': 'yellow_background'
-            };
-            color = emojiConfig[emoji] || 'gray_background';
+      // 单行处理
+      // 检查是否是标题（以 # 开头）
+      if (trimmedLine.startsWith('# ')) {
+        children.push({
+          object: 'block',
+          type: 'heading_1',
+          heading_1: {
+            rich_text: [{
+              text: { content: trimmedLine.substring(2).substring(0, 2000) }
+            }]
           }
-
+        });
+        blockCount++;
+      } else if (trimmedLine.startsWith('## ')) {
+        children.push({
+          object: 'block',
+          type: 'heading_2',
+          heading_2: {
+            rich_text: [{
+              text: { content: trimmedLine.substring(3).substring(0, 2000) }
+            }]
+          }
+        });
+        blockCount++;
+      } else if (trimmedLine.startsWith('### ')) {
+        children.push({
+          object: 'block',
+          type: 'heading_3',
+          heading_3: {
+            rich_text: [{
+              text: { content: trimmedLine.substring(4).substring(0, 2000) }
+            }]
+          }
+        });
+        blockCount++;
+      } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+        // V4.2.4: 支持无序列表（含链接解析）
+        const listText = trimmedLine.substring(2);
+        children.push({
+          object: 'block',
+          type: 'bulleted_list_item',
+          bulleted_list_item: {
+            rich_text: parseMarkdownToRichText(listText)
+          }
+        });
+        blockCount++;
+      } else if (/^\d+\.\s/.test(trimmedLine)) {
+        // V4.2.4: 支持有序列表（含链接解析）
+        const listContent = trimmedLine.replace(/^\d+\.\s/, '');
+        children.push({
+          object: 'block',
+          type: 'numbered_list_item',
+          numbered_list_item: {
+            rich_text: parseMarkdownToRichText(listContent)
+          }
+        });
+        blockCount++;
+      } else if (trimmedLine === '---' || trimmedLine === '***') {
+        // V4.2.4: 支持分割线
+        children.push({
+          object: 'block',
+          type: 'divider',
+          divider: {}
+        });
+        blockCount++;
+      } else if (/^!\[.*?\]\((https?:\/\/[^)]+)\)$/.test(trimmedLine)) {
+        // V4.2.4: 支持图片 ![alt](url)，包括 GitHub 图片 URL 修复
+        const imgMatch = trimmedLine.match(/^!\[.*?\]\((https?:\/\/[^)]+)\)$/);
+        if (imgMatch && imgMatch[1]) {
+          let imgUrl = imgMatch[1];
+          // 修复 GitHub 图片 URL：将 blob URL 转换为 raw URL
+          if (imgUrl.includes('github.com') && imgUrl.includes('/blob/')) {
+            imgUrl = imgUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+          }
           children.push({
             object: 'block',
-            type: 'callout',
-            callout: {
-              rich_text: parseMarkdownToRichText(content),
-              icon: { type: 'emoji', emoji: emoji },
-              color: color
+            type: 'image',
+            image: {
+              type: 'external',
+              external: {
+                url: imgUrl
+              }
             }
           });
-        } else if (trimmedLine === '---' || trimmedLine === '***') {
-          // V4.0.2: 支持分割线
-          children.push({
-            object: 'block',
-            type: 'divider',
-            divider: {}
-          });
-        } else if (/^!\[.*?\]\((https?:\/\/[^)]+)\)$/.test(trimmedLine)) {
-          // V4.0.2+V4.2.3: 支持图片 ![alt](url)，包括 GitHub 图片 URL 修复
-          const imgMatch = trimmedLine.match(/^!\[.*?\]\((https?:\/\/[^)]+)\)$/);
-          if (imgMatch && imgMatch[1]) {
-            let imgUrl = imgMatch[1];
-            // 修复 GitHub 图片 URL：将 blob URL 转换为 raw URL
-            if (imgUrl.includes('github.com') && imgUrl.includes('/blob/')) {
-              imgUrl = imgUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-            }
+          blockCount++;
+        }
+      } else if (/<iframe[^>]+src="([^"]+)"[^>]*>/i.test(trimmedLine)) {
+        // V4.2.4: 支持 iframe 视频嵌入 (多平台)
+        const iframeMatch = trimmedLine.match(/<iframe[^>]+src="([^"]+)"[^>]*>/i);
+        if (iframeMatch && iframeMatch[1]) {
+          const embedUrl = iframeMatch[1];
+          let videoUrl = embedUrl;
+          let useVideoBlock = false;
+
+          if (embedUrl.includes('youtube.com/embed/')) {
+            const videoId = embedUrl.match(/youtube\.com\/embed\/([^?&]+)/)?.[1];
+            if (videoId) videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
+            useVideoBlock = true;
+          } else if (embedUrl.includes('player.vimeo.com')) {
+            const vimeoId = embedUrl.match(/vimeo\.com\/video\/(\d+)/)?.[1];
+            if (vimeoId) videoUrl = 'https://vimeo.com/' + vimeoId;
+            useVideoBlock = true;
+          } else if (embedUrl.includes('player.bilibili.com')) {
+            const bvid = embedUrl.match(/bvid=([^&]+)/)?.[1];
+            if (bvid) videoUrl = 'https://www.bilibili.com/video/' + bvid;
+          } else if (embedUrl.includes('player.youku.com')) {
+            const youkuId = embedUrl.match(/embed\/([^?&/]+)/)?.[1];
+            if (youkuId) videoUrl = 'https://v.youku.com/v_show/id_' + youkuId + '.html';
+          } else if (embedUrl.includes('tiktok.com/embed/')) {
+            const tiktokId = embedUrl.match(/embed\/(\d+)/)?.[1];
+            if (tiktokId) videoUrl = 'https://www.tiktok.com/video/' + tiktokId;
+          } else if (embedUrl.includes('v.qq.com')) {
+            const qqVid = embedUrl.match(/vid=([^&]+)/)?.[1];
+            if (qqVid) videoUrl = 'https://v.qq.com/x/cover/' + qqVid + '.html';
+          } else if (embedUrl.includes('ixigua.com/iframe/')) {
+            const xiguaId = embedUrl.match(/iframe\/(\d+)/)?.[1];
+            if (xiguaId) videoUrl = 'https://www.ixigua.com/' + xiguaId;
+          } else if (embedUrl.includes('facebook.com/plugins/video')) {
+            const fbMatch = embedUrl.match(/href=([^&]+)/);
+            if (fbMatch) videoUrl = decodeURIComponent(fbMatch[1]);
+          }
+
+          if (useVideoBlock) {
             children.push({
               object: 'block',
-              type: 'image',
-              image: {
-                type: 'external',
-                external: {
-                  url: imgUrl
-                }
-              }
+              type: 'video',
+              video: { type: 'external', external: { url: videoUrl } }
             });
-          }
-        } else if (/<iframe[^>]+src="([^"]+)"[^>]*>/i.test(trimmedLine)) {
-          // V4.0.3+V4.0.5: 支持 iframe 视频嵌入 (多平台)
-          // Notion 原生支持: YouTube, Vimeo
-          // 其他平台: 使用 bookmark 块
-          const iframeMatch = trimmedLine.match(/<iframe[^>]+src="([^"]+)"[^>]*>/i);
-          if (iframeMatch && iframeMatch[1]) {
-            const embedUrl = iframeMatch[1];
-            // 检测视频平台并转换为原始链接
-            let videoUrl = embedUrl;
-            let useVideoBlock = false; // 是否使用 Notion 原生 video 块
-
-            if (embedUrl.includes('youtube.com/embed/')) {
-              const videoId = embedUrl.match(/youtube\.com\/embed\/([^?&]+)/)?.[1];
-              if (videoId) videoUrl = 'https://www.youtube.com/watch?v=' + videoId;
-              useVideoBlock = true; // YouTube 原生支持
-            } else if (embedUrl.includes('player.vimeo.com')) {
-              const vimeoId = embedUrl.match(/vimeo\.com\/video\/(\d+)/)?.[1];
-              if (vimeoId) videoUrl = 'https://vimeo.com/' + vimeoId;
-              useVideoBlock = true; // Vimeo 原生支持
-            } else if (embedUrl.includes('player.bilibili.com')) {
-              const bvid = embedUrl.match(/bvid=([^&]+)/)?.[1];
-              if (bvid) videoUrl = 'https://www.bilibili.com/video/' + bvid;
-              // Bilibili 使用 bookmark，Notion 不原生支持
-            } else if (embedUrl.includes('player.youku.com')) {
-              const youkuId = embedUrl.match(/embed\/([^?&/]+)/)?.[1];
-              if (youkuId) videoUrl = 'https://v.youku.com/v_show/id_' + youkuId + '.html';
-            } else if (embedUrl.includes('tiktok.com/embed/')) {
-              const tiktokId = embedUrl.match(/embed\/(\d+)/)?.[1];
-              if (tiktokId) videoUrl = 'https://www.tiktok.com/video/' + tiktokId;
-            } else if (embedUrl.includes('v.qq.com')) {
-              const qqVid = embedUrl.match(/vid=([^&]+)/)?.[1];
-              if (qqVid) videoUrl = 'https://v.qq.com/x/cover/' + qqVid + '.html';
-            } else if (embedUrl.includes('ixigua.com/iframe/')) {
-              const xiguaId = embedUrl.match(/iframe\/(\d+)/)?.[1];
-              if (xiguaId) videoUrl = 'https://www.ixigua.com/' + xiguaId;
-            } else if (embedUrl.includes('facebook.com/plugins/video')) {
-              const fbMatch = embedUrl.match(/href=([^&]+)/);
-              if (fbMatch) videoUrl = decodeURIComponent(fbMatch[1]);
-            }
-
-            if (useVideoBlock) {
-              // YouTube/Vimeo 使用原生 video 块
-              children.push({
-                object: 'block',
-                type: 'video',
-                video: {
-                  type: 'external',
-                  external: {
-                    url: videoUrl
-                  }
-                }
-              });
-            } else {
-              // 其他平台使用 bookmark 块（链接预览卡片）
-              children.push({
-                object: 'block',
-                type: 'bookmark',
-                bookmark: {
-                  url: videoUrl
-                }
-              });
-            }
-          }
-        } else if (/^\[.+\]\((https?:\/\/[^)]+)\)$/.test(trimmedLine)) {
-          // V4.2.3: 纯链接行智能转换（根据链接类型选择最佳块类型）
-          const linkMatch = trimmedLine.match(/^\[.+\]\((https?:\/\/[^)]+)\)$/);
-          if (linkMatch && linkMatch[1]) {
-            const linkUrl = linkMatch[1].toLowerCase();
-
-            // 检测视频直链 (.mp4, .webm, .mov, .avi, .mkv)
-            if (/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i.test(linkUrl)) {
-              children.push({
-                object: 'block',
-                type: 'video',
-                video: {
-                  type: 'external',
-                  external: { url: linkMatch[1] }
-                }
-              });
-            }
-            // 检测音频直链 (.mp3, .wav, .ogg, .m4a, .flac)
-            else if (/\.(mp3|wav|ogg|m4a|flac|aac)(\?.*)?$/i.test(linkUrl)) {
-              children.push({
-                object: 'block',
-                type: 'audio',
-                audio: {
-                  type: 'external',
-                  external: { url: linkMatch[1] }
-                }
-              });
-            }
-            // 检测视频平台链接（YouTube, Vimeo, Bilibili, 优酷等）
-            else if (/youtube\.com\/watch|youtu\.be\/|vimeo\.com\/\d+/i.test(linkUrl)) {
-              // YouTube/Vimeo 使用原生 video 块
-              children.push({
-                object: 'block',
-                type: 'video',
-                video: {
-                  type: 'external',
-                  external: { url: linkMatch[1] }
-                }
-              });
-            }
-            else if (/bilibili\.com\/video|b23\.tv|v\.youku\.com|youku\.com\/v_show|v\.qq\.com|weixin\.qq\.com\/sph|ixigua\.com|toutiao\.com\/video|douyin\.com|tiktok\.com/i.test(linkUrl)) {
-              // V4.2.3: 国内视频平台使用 bookmark 块（展示预览卡片，点击跳转播放）
-              // 注：Notion embed 块不支持国内视频平台，使用 bookmark 更可靠
-              // 支持：Bilibili、优酷、腾讯视频、视频号、西瓜视频、抖音、TikTok
-              children.push({
-                object: 'block',
-                type: 'bookmark',
-                bookmark: { url: linkMatch[1] }
-              });
-            }
-            // 检测网盘/云存储链接（使用 bookmark 展示预览卡片）
-            else if (/drive\.google\.com|docs\.google\.com|onedrive\.live\.com|1drv\.ms|dropbox\.com|pan\.baidu\.com|aliyundrive\.com|cloud\.189\.cn|weiyun\.com/i.test(linkUrl)) {
-              children.push({
-                object: 'block',
-                type: 'bookmark',
-                bookmark: { url: linkMatch[1] }
-              });
-            }
-            // 检测办公文件链接 (PDF, Word, Excel, PPT, SVG)
-            else if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|svg)(\?.*)?$/i.test(linkUrl)) {
-              // 使用 bookmark 块展示文件链接预览
-              children.push({
-                object: 'block',
-                type: 'bookmark',
-                bookmark: { url: linkMatch[1] }
-              });
-            }
-            // 检测 GitHub 仓库/文件链接
-            else if (/github\.com\/[^/]+\/[^/]+/i.test(linkUrl)) {
-              // GitHub 链接使用 bookmark 展示预览卡片
-              children.push({
-                object: 'block',
-                type: 'bookmark',
-                bookmark: { url: linkMatch[1] }
-              });
-            }
-            // 其他普通链接使用 bookmark（链接预览卡片）
-            else {
-              children.push({
-                object: 'block',
-                type: 'bookmark',
-                bookmark: { url: linkMatch[1] }
-              });
-            }
-          }
-        } else if (/^> \*\*(.+)\*\*$/.test(trimmedLine)) {
-          // V4.0.3: 引用块标题（onebox 格式）转为 quote block
-          const quoteMatch = trimmedLine.match(/^> \*\*(.+)\*\*$/);
-          if (quoteMatch) {
-            children.push({
-              object: 'block',
-              type: 'quote',
-              quote: {
-                rich_text: [{
-                  text: { content: quoteMatch[1].substring(0, 2000) },
-                  annotations: { bold: true }
-                }]
-              }
-            });
-          }
-        } else if (/^> 🔗\s*(https?:\/\/\S+)$/.test(trimmedLine)) {
-          // V4.0.3: 引用块中的链接行转为 bookmark
-          const urlMatch = trimmedLine.match(/^> 🔗\s*(https?:\/\/\S+)$/);
-          if (urlMatch && urlMatch[1]) {
+          } else {
             children.push({
               object: 'block',
               type: 'bookmark',
-              bookmark: {
-                url: urlMatch[1]
-              }
+              bookmark: { url: videoUrl }
             });
           }
-        } else if (/^>\s+/.test(trimmedLine)) {
-          // V4.0.3+V4.2.3: 普通引用行转为 quote block（含链接解析）
-          const quoteText = trimmedLine.replace(/^>\s*/, '');
-          if (quoteText && !quoteText.startsWith('![')) {
-            children.push({
-              object: 'block',
-              type: 'quote',
-              quote: {
-                rich_text: parseMarkdownToRichText(quoteText)
-              }
-            });
-          }
-        } else {
-          // V4.2.3: 普通段落（可能包含内联图片和链接）
-          // 将内联图片 ![alt](url) 转为 [图片](url) 链接文本，并修复 GitHub 图片 URL
-          const textWithLinks = trimmedLine.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
-            // 修复 GitHub 图片 URL
-            let fixedUrl = url;
-            if (url.includes('github.com') && url.includes('/blob/')) {
-              fixedUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-            }
-            return `[图片: ${alt}](${fixedUrl})`;
-          });
-          // 使用 parseMarkdownToRichText 解析链接和格式为 Notion 格式
-          children.push({
-            object: 'block',
-            type: 'paragraph',
-            paragraph: {
-              rich_text: parseMarkdownToRichText(textWithLinks)
-            }
-          });
+          blockCount++;
         }
+      } else if (/^\[.+\]\((https?:\/\/[^)]+)\)$/.test(trimmedLine)) {
+        // V4.2.4: 纯链接行智能转换（根据链接类型选择最佳块类型）
+        const linkMatch = trimmedLine.match(/^\[.+\]\((https?:\/\/[^)]+)\)$/);
+        if (linkMatch && linkMatch[1]) {
+          const linkUrl = linkMatch[1].toLowerCase();
 
+          if (/\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'video', video: { type: 'external', external: { url: linkMatch[1] } } });
+          } else if (/\.(mp3|wav|ogg|m4a|flac|aac)(\?.*)?$/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'audio', audio: { type: 'external', external: { url: linkMatch[1] } } });
+          } else if (/youtube\.com\/watch|youtu\.be\/|vimeo\.com\/\d+/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'video', video: { type: 'external', external: { url: linkMatch[1] } } });
+          } else if (/bilibili\.com\/video|b23\.tv|v\.youku\.com|youku\.com\/v_show|v\.qq\.com|weixin\.qq\.com\/sph|ixigua\.com|toutiao\.com\/video|douyin\.com|tiktok\.com/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'bookmark', bookmark: { url: linkMatch[1] } });
+          } else if (/drive\.google\.com|docs\.google\.com|onedrive\.live\.com|1drv\.ms|dropbox\.com|pan\.baidu\.com|aliyundrive\.com|cloud\.189\.cn|weiyun\.com/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'bookmark', bookmark: { url: linkMatch[1] } });
+          } else if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|svg)(\?.*)?$/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'bookmark', bookmark: { url: linkMatch[1] } });
+          } else if (/github\.com\/[^/]+\/[^/]+/i.test(linkUrl)) {
+            children.push({ object: 'block', type: 'bookmark', bookmark: { url: linkMatch[1] } });
+          } else {
+            children.push({ object: 'block', type: 'bookmark', bookmark: { url: linkMatch[1] } });
+          }
+          blockCount++;
+        }
+      } else {
+        // V4.2.4: 普通段落（可能包含内联图片和链接）
+        const textWithLinks = trimmedLine.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+          let fixedUrl = url;
+          if (url.includes('github.com') && url.includes('/blob/')) {
+            fixedUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+          }
+          return `[图片: ${alt}](${fixedUrl})`;
+        });
+        children.push({
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: parseMarkdownToRichText(textWithLinks)
+          }
+        });
         blockCount++;
       }
+
+      i++; // V4.2.4: 移动到下一行
     }
   }
 
@@ -1968,7 +2126,7 @@ async function testNotionConnection(config) {
     { configKey: 'notionPropTitle', label: '标题', required: true, expectedType: 'title' },
     { configKey: 'notionPropUrl', label: '链接', required: true, expectedType: 'url' },
     { configKey: 'notionPropAuthor', label: '作者', required: false, expectedType: 'rich_text' },
-    { configKey: 'notionPropCategory', label: '分类', required: false, expectedType: ['rich_text', 'select'] },
+    { configKey: 'notionPropCategory', label: '分类', required: false, expectedType: ['rich_text', 'select', 'multi_select'] },
     { configKey: 'notionPropSavedDate', label: '保存日期', required: false, expectedType: 'date' },
     { configKey: 'notionPropCommentCount', label: '评论数', required: false, expectedType: 'number' }
   ];
