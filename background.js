@@ -1063,6 +1063,7 @@ function buildNotionPageData(postData, config) {
 }
 
 // 保存到 Notion
+// V4.0.6: 支持分批创建children（Notion API限制每次最多100个块）
 async function saveToNotion(postData, config) {
   console.log('[Discourse Saver→Notion] 开始保存...');
   console.log('[Discourse Saver→Notion] 标题:', postData.title);
@@ -1079,7 +1080,15 @@ async function saveToNotion(postData, config) {
   // 构建页面数据
   const pageData = buildNotionPageData(postData, config);
 
-  // 调用 Notion API 创建页面
+  // Notion API 每次最多100个children，需要分批处理
+  const NOTION_CHILDREN_LIMIT = 100;
+  const allChildren = pageData.children || [];
+  const firstBatch = allChildren.slice(0, NOTION_CHILDREN_LIMIT);
+  const remainingChildren = allChildren.slice(NOTION_CHILDREN_LIMIT);
+
+  console.log(`[Discourse Saver→Notion] 总块数: ${allChildren.length}, 首批: ${firstBatch.length}, 剩余: ${remainingChildren.length}`);
+
+  // 1. 创建页面（带首批children）
   let response;
   try {
     response = await fetch('https://api.notion.com/v1/pages', {
@@ -1092,7 +1101,7 @@ async function saveToNotion(postData, config) {
       body: JSON.stringify({
         parent: { database_id: databaseId },
         properties: pageData.properties,
-        children: pageData.children
+        children: firstBatch
       })
     });
   } catch (fetchError) {
@@ -1111,7 +1120,46 @@ async function saveToNotion(postData, config) {
   }
 
   const result = await response.json();
-  console.log('[Discourse Saver→Notion] 保存成功，页面ID:', result.id);
+  const pageId = result.id;
+  console.log('[Discourse Saver→Notion] 页面创建成功，ID:', pageId);
+
+  // 2. 如果有剩余children，分批追加
+  if (remainingChildren.length > 0) {
+    console.log(`[Discourse Saver→Notion] 开始追加剩余 ${remainingChildren.length} 个块...`);
+
+    for (let i = 0; i < remainingChildren.length; i += NOTION_CHILDREN_LIMIT) {
+      const batch = remainingChildren.slice(i, i + NOTION_CHILDREN_LIMIT);
+      const batchNum = Math.floor(i / NOTION_CHILDREN_LIMIT) + 2;
+
+      try {
+        const appendResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Notion-Version': NOTION_API_VERSION,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ children: batch })
+        });
+
+        if (!appendResponse.ok) {
+          console.warn(`[Discourse Saver→Notion] 批次${batchNum}追加失败:`, appendResponse.status);
+          // 继续处理其他批次，不中断
+        } else {
+          console.log(`[Discourse Saver→Notion] 批次${batchNum}追加成功 (${batch.length}个块)`);
+        }
+
+        // 防止请求过快
+        if (i + NOTION_CHILDREN_LIMIT < remainingChildren.length) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+      } catch (appendError) {
+        console.warn(`[Discourse Saver→Notion] 批次${batchNum}追加异常:`, appendError);
+      }
+    }
+  }
+
+  console.log('[Discourse Saver→Notion] 保存完成');
 
   return {
     success: true,

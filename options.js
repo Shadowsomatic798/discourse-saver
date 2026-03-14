@@ -54,6 +54,7 @@ const DEFAULT_CONFIG = {
   // 评论设置
   saveComments: false,
   commentCount: 100,
+  saveAllComments: false,
   foldComments: false
 };
 
@@ -228,6 +229,7 @@ function loadOptions() {
     // 评论设置
     document.getElementById('saveComments').checked = config.saveComments;
     document.getElementById('commentCount').value = config.commentCount;
+    document.getElementById('saveAllComments').checked = config.saveAllComments;
     document.getElementById('foldComments').checked = config.foldComments;
 
     // 更新UI状态
@@ -235,6 +237,7 @@ function loadOptions() {
     updateFeishuOptionsVisibility(config.saveToFeishu);
     updateNotionOptionsVisibility(config.saveToNotion);
     updateCommentOptionsVisibility(config.saveComments);
+    updateSaveAllCommentsVisibility(config.saveAllComments);
     updateImageSettingsVisibility(config.embedImages);
 
     // 确保所有面板默认展开
@@ -288,6 +291,19 @@ function updateCommentOptionsVisibility(enabled) {
   }
 }
 
+// 更新"保存全部"选项状态
+function updateSaveAllCommentsVisibility(enabled) {
+  const commentCountInput = document.getElementById('commentCount');
+  const warningEl = document.getElementById('allCommentsWarning');
+  if (commentCountInput) {
+    commentCountInput.disabled = enabled;
+    commentCountInput.style.opacity = enabled ? '0.5' : '1';
+  }
+  if (warningEl) {
+    warningEl.style.display = enabled ? 'block' : 'none';
+  }
+}
+
 // 更新图片设置面板可见性 (V3.6.0)
 function updateImageSettingsVisibility(enabled) {
   const panel = document.getElementById('imageSettingsPanel');
@@ -305,8 +321,8 @@ function saveOptions(e) {
   e.preventDefault();
 
   const commentCount = Math.min(
-    Math.max(1, parseInt(document.getElementById('commentCount').value) || 100),
-    3000
+    Math.max(0, parseInt(document.getElementById('commentCount').value) || 100),
+    10000
   );
 
   const config = {
@@ -354,6 +370,7 @@ function saveOptions(e) {
     // 评论设置
     saveComments: document.getElementById('saveComments').checked,
     commentCount: commentCount,
+    saveAllComments: document.getElementById('saveAllComments').checked,
     foldComments: document.getElementById('foldComments').checked
   };
 
@@ -612,6 +629,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 保存评论复选框控制子选项
   document.getElementById('saveComments').addEventListener('change', (e) => {
     updateCommentOptionsVisibility(e.target.checked);
+  });
+
+  // 保存全部评论复选框
+  document.getElementById('saveAllComments').addEventListener('change', (e) => {
+    updateSaveAllCommentsVisibility(e.target.checked);
   });
 
   // 图片嵌入设置 (V3.6.0)

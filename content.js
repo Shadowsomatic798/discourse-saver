@@ -42,6 +42,7 @@
     includeImages: true,
     saveComments: false,
     commentCount: 100,
+    saveAllComments: false,  // V4.0.6: 保存全部评论
     foldComments: false,  // V3.2: 默认不折叠，使用普通Markdown格式
     useAdvancedUri: true, // V3.4: 默认使用 Advanced URI 插件
 
@@ -384,6 +385,94 @@
 
     console.log(`[Discourse Saver] 提取到 ${comments.length} 条评论`);
     return comments;
+  }
+
+  // V4.0.6: 使用 Discourse API 获取评论（解决懒加载问题）
+  async function extractCommentsViaAPI(topicId, maxCount, saveAll = false, progressCallback = null) {
+    const comments = [];
+    const baseUrl = window.location.origin;
+
+    try {
+      // 1. 获取帖子信息和所有评论ID
+      if (progressCallback) progressCallback('正在获取帖子信息...');
+      const topicUrl = `${baseUrl}/t/${topicId}.json`;
+      const topicResponse = await fetch(topicUrl, { credentials: 'include' });
+
+      if (!topicResponse.ok) {
+        throw new Error(`获取帖子信息失败: ${topicResponse.status}`);
+      }
+
+      const topicData = await topicResponse.json();
+      const stream = topicData.post_stream?.stream || [];
+      const totalPosts = stream.length;
+
+      if (totalPosts === 0) {
+        console.log('[Discourse Saver] 没有找到评论');
+        return comments;
+      }
+
+      // 跳过主帖（第一个），获取评论ID列表
+      const commentIds = stream.slice(1);
+      const targetCount = saveAll ? commentIds.length : Math.min(maxCount, commentIds.length);
+      const idsToFetch = commentIds.slice(0, targetCount);
+
+      console.log(`[Discourse Saver] 总评论数: ${commentIds.length}, 目标获取: ${targetCount}`);
+
+      // 显示警告（超过500条）
+      if (targetCount > 500 && progressCallback) {
+        progressCallback(`评论较多(${targetCount}条)，请耐心等待...`);
+        await new Promise(r => setTimeout(r, 1000)); // 让用户看到警告
+      }
+
+      // 2. 分批获取评论内容（每批20个）
+      const batchSize = 20;
+      for (let i = 0; i < idsToFetch.length; i += batchSize) {
+        const batch = idsToFetch.slice(i, i + batchSize);
+        const params = batch.map(id => `post_ids[]=${id}`).join('&');
+        const postsUrl = `${baseUrl}/t/${topicId}/posts.json?${params}`;
+
+        if (progressCallback) {
+          const progress = Math.min(i + batchSize, idsToFetch.length);
+          progressCallback(`正在加载评论 ${progress}/${targetCount}...`);
+        }
+
+        const postsResponse = await fetch(postsUrl, { credentials: 'include' });
+        if (!postsResponse.ok) {
+          console.warn(`[Discourse Saver] 批次请求失败: ${postsResponse.status}`);
+          continue;
+        }
+
+        const postsData = await postsResponse.json();
+        const posts = postsData.post_stream?.posts || [];
+
+        for (const post of posts) {
+          if (post.post_number === 1) continue; // 跳过主帖
+
+          comments.push({
+            username: post.username || post.display_username || '匿名用户',
+            contentHTML: post.cooked || '',
+            position: String(post.post_number),
+            time: post.created_at || '',
+            likes: String(post.like_count || 0)
+          });
+        }
+
+        // 防止请求过快被限制
+        if (i + batchSize < idsToFetch.length) {
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
+
+      // 按楼层号排序
+      comments.sort((a, b) => parseInt(a.position) - parseInt(b.position));
+
+      console.log(`[Discourse Saver] API获取到 ${comments.length} 条评论`);
+      return comments;
+
+    } catch (error) {
+      console.error('[Discourse Saver] API获取评论失败:', error);
+      throw error;
+    }
   }
 
   // V3.5.3: 提取指定楼层的单条评论
@@ -1217,9 +1306,30 @@
           return;
         }
       } else if (config.saveComments) {
-        // 主帖模式 + 启用了保存评论：提取所有评论
-        showNotification('正在提取评论...', 'info');
-        comments = extractComments(config.commentCount);
+        // 主帖模式 + 启用了保存评论：提取评论
+        // V4.0.6: 根据配置决定使用DOM还是API获取评论
+        const useAPI = config.saveAllComments || config.commentCount > 30;
+
+        if (useAPI && topicId) {
+          // 使用API获取评论（解决懒加载问题）
+          showNotification('正在通过API加载评论...', 'info');
+          try {
+            comments = await extractCommentsViaAPI(
+              topicId,
+              config.commentCount,
+              config.saveAllComments,
+              (msg) => showNotification(msg, 'info')
+            );
+          } catch (apiError) {
+            console.warn('[Discourse Saver] API获取失败，回退到DOM方式:', apiError);
+            showNotification('API获取失败，使用DOM方式...', 'info');
+            comments = extractComments(config.commentCount);
+          }
+        } else {
+          // 使用DOM方式获取（少量评论时更快）
+          showNotification('正在提取评论...', 'info');
+          comments = extractComments(config.commentCount);
+        }
       }
 
       // 转换为Markdown（带评论）

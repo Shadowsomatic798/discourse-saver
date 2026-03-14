@@ -543,8 +543,8 @@
           </div>
           <div class="section-content expanded" id="content-siteSettings">
             <div class="help-text" style="margin-bottom: 12px;">
-              插件会自动检测 Discourse 论坛（如 LinuxDo、Meta.discourse.org 等）。<br>
-              如果某个站点未被自动识别，可以手动添加。
+              <span data-i18n="siteSettings.autoDetectHelp">插件会自动检测 Discourse 论坛（如 LinuxDo、Meta.discourse.org 等）。</span><br>
+              <span data-i18n="siteSettings.manualAddHelp">如果某个站点未被自动识别，可以手动添加。</span>
             </div>
 
             <div class="form-group">
@@ -611,9 +611,9 @@
 
             <div class="checkbox-row">
               <input type="checkbox" id="useAdvancedUri" checked>
-              <label for="useAdvancedUri">使用 Advanced URI 插件（支持大内容）</label>
+              <label for="useAdvancedUri" data-i18n="obsidian.useAdvancedUri">使用 Advanced URI 插件（支持大内容）</label>
             </div>
-            <div class="help-text" style="margin-left: 24px;">
+            <div class="help-text" style="margin-left: 24px;" data-i18n="obsidian.advancedUriHelp">
               需先在 Obsidian 中安装 "Advanced URI" 插件
             </div>
           </div>
@@ -667,23 +667,23 @@
 
               <div class="checkbox-row" style="margin-top: 12px;">
                 <input type="checkbox" id="feishuUploadAttachment">
-                <label for="feishuUploadAttachment">上传 MD 附件（需额外权限，可选）</label>
+                <label for="feishuUploadAttachment" data-i18n="feishu.uploadMd">上传 MD 附件（需额外权限，可选）</label>
               </div>
               <div class="help-text" style="margin-left: 24px;" data-i18n="feishu.uploadMdHelpDetail">不勾选则只保存文本摘要，无需 drive 权限</div>
 
               <div class="tip-box" style="margin-top: 16px; background: #fef3c7; border-left-color: #d97706;">
                 <p>
-                  <strong>1. 必须的权限（均为免审）：</strong><br>
-                  bitable:app（多维表格读写）
+                  <strong data-i18n="feishu.perm1Title">1. 必须的权限（均为免审）：</strong><br>
+                  <span data-i18n="feishu.perm1Content">bitable:app（多维表格读写）</span>
                 </p>
                 <p style="margin-top: 8px;">
-                  <strong>2. 上传附件的权限（免审）：</strong><br>
-                  drive:file:upload（上传文件到云空间）
+                  <strong data-i18n="feishu.perm2Title">2. 上传附件的权限（免审）：</strong><br>
+                  <span data-i18n="feishu.perm2Content">drive:file:upload（上传文件到云空间）</span>
                 </p>
                 <p style="margin-top: 8px;">
-                  <strong>3. 多维表格字段：</strong><br>
-                  标题（文本）、链接（超链接）、作者（文本）、保存时间（日期）、评论数（数字）<br>
-                  如勾选上传附件：附件（附件）；否则：正文（文本）
+                  <strong data-i18n="feishu.perm3Title">3. 多维表格字段：</strong><br>
+                  <span data-i18n="feishu.perm3Content1">标题（文本）、链接（超链接）、作者（文本）、保存时间（日期）、评论数（数字）</span><br>
+                  <span data-i18n="feishu.perm3Content2">如勾选上传附件：附件（附件）；否则：正文（文本）</span>
                 </p>
               </div>
             </div>
@@ -702,47 +702,47 @@
           <div class="section-content expanded" id="content-notionSettings">
             <div id="notionOptions">
               <div class="form-group">
-                <label>Integration Token <span style="color: #ef4444;">*</span></label>
-                <input type="password" id="notionToken" placeholder="secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                <label><span data-i18n="notion.token">Integration Token</span> <span style="color: #ef4444;">*</span></label>
+                <input type="password" id="notionToken" placeholder="secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" data-i18n="notion.tokenPlaceholder">
                 <div class="help-text">
-                  在 <a href="https://www.notion.so/my-integrations" target="_blank">Notion Integrations</a> 创建获取
-                  · <a href="NOTION-GUIDE.html" target="_blank">详细教程</a>
+                  <span data-i18n="notion.tokenHelpPre">在</span> <a href="https://www.notion.so/my-integrations" target="_blank">Notion Integrations</a> <span data-i18n="notion.tokenHelpPost">创建获取</span>
+                  · <a href="NOTION-GUIDE.html" target="_blank" data-i18n="notion.detailedGuide">详细教程</a>
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Database ID <span style="color: #ef4444;">*</span></label>
-                <input type="text" id="notionDatabaseId" placeholder="a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4">
+                <label><span data-i18n="notion.databaseId">Database ID</span> <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="notionDatabaseId" placeholder="a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4" data-i18n="notion.databaseIdPlaceholder">
                 <div class="help-text" data-i18n="notion.databaseIdHelpDetail">从 Database 链接中复制，格式为 32 位字符（可含连字符）</div>
               </div>
 
               <div class="form-group">
-                <label>属性映射配置</label>
+                <label data-i18n="notion.propertyMapping">属性映射配置</label>
                 <div class="help-text" style="margin-bottom: 8px;" data-i18n="notion.propertyMappingHelp">属性名需与 Notion Database 中的列名完全匹配（区分大小写）</div>
                 <div style="background: #f9fafb; border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px;">
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 12px; color: #6b7280;">标题属性名 <span style="color: #ef4444;">*</span> <span style="color: #9ca3af; font-weight: normal;">（类型：Title）</span></label>
-                    <input type="text" id="notionPropTitle" value="标题" placeholder="标题" style="padding: 6px 10px;">
+                    <label style="font-size: 12px; color: #6b7280;"><span data-i18n="notion.propTitleLabel">标题属性名</span> <span style="color: #ef4444;">*</span> <span style="color: #9ca3af; font-weight: normal;" data-i18n="notion.propTitleType">（类型：Title）</span></label>
+                    <input type="text" id="notionPropTitle" value="标题" placeholder="标题" data-i18n="notion.propTitlePlaceholder" style="padding: 6px 10px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 12px; color: #6b7280;">链接属性名 <span style="color: #ef4444;">*</span> <span style="color: #9ca3af; font-weight: normal;">（类型：URL）</span></label>
-                    <input type="text" id="notionPropUrl" value="链接" placeholder="链接" style="padding: 6px 10px;">
+                    <label style="font-size: 12px; color: #6b7280;"><span data-i18n="notion.propUrlLabel">链接属性名</span> <span style="color: #ef4444;">*</span> <span style="color: #9ca3af; font-weight: normal;" data-i18n="notion.propUrlType">（类型：URL）</span></label>
+                    <input type="text" id="notionPropUrl" value="链接" placeholder="链接" data-i18n="notion.propUrlPlaceholder" style="padding: 6px 10px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 12px; color: #6b7280;">作者属性名 <span style="color: #9ca3af; font-weight: normal;">（类型：Rich Text）</span></label>
-                    <input type="text" id="notionPropAuthor" value="作者" placeholder="作者" style="padding: 6px 10px;">
+                    <label style="font-size: 12px; color: #6b7280;"><span data-i18n="notion.propAuthorLabel">作者属性名</span> <span style="color: #9ca3af; font-weight: normal;" data-i18n="notion.propAuthorType">（类型：Rich Text）</span></label>
+                    <input type="text" id="notionPropAuthor" value="作者" placeholder="作者" data-i18n="notion.propAuthorPlaceholder" style="padding: 6px 10px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 12px; color: #6b7280;">分类属性名 <span style="color: #9ca3af; font-weight: normal;">（类型：Rich Text 或 Select）</span></label>
-                    <input type="text" id="notionPropCategory" value="分类" placeholder="分类" style="padding: 6px 10px;">
+                    <label style="font-size: 12px; color: #6b7280;"><span data-i18n="notion.propCategoryLabel">分类属性名</span> <span style="color: #9ca3af; font-weight: normal;" data-i18n="notion.propCategoryType">（类型：Rich Text 或 Select）</span></label>
+                    <input type="text" id="notionPropCategory" value="分类" placeholder="分类" data-i18n="notion.propCategoryPlaceholder" style="padding: 6px 10px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 12px; color: #6b7280;">保存日期属性名 <span style="color: #9ca3af; font-weight: normal;">（类型：Date）</span></label>
-                    <input type="text" id="notionPropSavedDate" value="保存日期" placeholder="保存日期" style="padding: 6px 10px;">
+                    <label style="font-size: 12px; color: #6b7280;"><span data-i18n="notion.propSavedDateLabel">保存日期属性名</span> <span style="color: #9ca3af; font-weight: normal;" data-i18n="notion.propSavedDateType">（类型：Date）</span></label>
+                    <input type="text" id="notionPropSavedDate" value="保存日期" placeholder="保存日期" data-i18n="notion.propSavedDatePlaceholder" style="padding: 6px 10px;">
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
-                    <label style="font-size: 12px; color: #6b7280;">评论数属性名 <span style="color: #9ca3af; font-weight: normal;">（类型：Number）</span></label>
-                    <input type="text" id="notionPropCommentCount" value="评论数" placeholder="评论数" style="padding: 6px 10px;">
+                    <label style="font-size: 12px; color: #6b7280;"><span data-i18n="notion.propCommentCountLabel">评论数属性名</span> <span style="color: #9ca3af; font-weight: normal;" data-i18n="notion.propCommentCountType">（类型：Number）</span></label>
+                    <input type="text" id="notionPropCommentCount" value="评论数" placeholder="评论数" data-i18n="notion.propCommentCountPlaceholder" style="padding: 6px 10px;">
                   </div>
                 </div>
               </div>
@@ -753,17 +753,17 @@
 
               <div class="tip-box" style="margin-top: 16px; background: #f0f9ff; border-left-color: #0ea5e9;">
                 <p>
-                  <strong>配置步骤：</strong><br>
-                  1. 创建 <a href="https://www.notion.so/my-integrations" target="_blank">Internal Integration</a> 并复制 Token<br>
-                  2. 创建 Database 并添加以下属性列（名称和类型必须匹配）：<br>
-                  &nbsp;&nbsp;&nbsp;• 标题（Title 类型）- 必填<br>
-                  &nbsp;&nbsp;&nbsp;• 链接（URL 类型）- 必填<br>
-                  &nbsp;&nbsp;&nbsp;• 作者（Rich Text 类型）<br>
-                  &nbsp;&nbsp;&nbsp;• 分类（Rich Text 或 Select 类型）<br>
-                  &nbsp;&nbsp;&nbsp;• 保存日期（Date 类型）<br>
-                  &nbsp;&nbsp;&nbsp;• 评论数（Number 类型）<br>
-                  3. 在 Database 页面点击「...」→「Connections」→ 添加你的 Integration<br>
-                  4. 从 Database 链接中复制 ID 并填入上方
+                  <strong data-i18n="notion.configStepsTitle">配置步骤：</strong><br>
+                  <span data-i18n="notion.configStep1">1. 创建 Internal Integration 并复制 Token</span><br>
+                  <span data-i18n="notion.configStep2">2. 创建 Database 并添加以下属性列（名称和类型必须匹配）：</span><br>
+                  <span data-i18n="notion.configStep2a">&nbsp;&nbsp;&nbsp;• 标题（Title 类型）- 必填</span><br>
+                  <span data-i18n="notion.configStep2b">&nbsp;&nbsp;&nbsp;• 链接（URL 类型）- 必填</span><br>
+                  <span data-i18n="notion.configStep2c">&nbsp;&nbsp;&nbsp;• 作者（Rich Text 类型）</span><br>
+                  <span data-i18n="notion.configStep2d">&nbsp;&nbsp;&nbsp;• 分类（Rich Text 或 Select 类型）</span><br>
+                  <span data-i18n="notion.configStep2e">&nbsp;&nbsp;&nbsp;• 保存日期（Date 类型）</span><br>
+                  <span data-i18n="notion.configStep2f">&nbsp;&nbsp;&nbsp;• 评论数（Number 类型）</span><br>
+                  <span data-i18n="notion.configStep3">3. 在 Database 页面点击「...」→「Connections」→ 添加你的 Integration</span><br>
+                  <span data-i18n="notion.configStep4">4. 从 Database 链接中复制 ID 并填入上方</span>
                 </p>
               </div>
             </div>
@@ -786,22 +786,21 @@
 
             <div class="checkbox-row">
               <input type="checkbox" id="includeImages" checked>
-              <label for="includeImages">保留图片链接</label>
+              <label for="includeImages" data-i18n="content.keepImages">保留图片链接</label>
             </div>
 
             <!-- 图片嵌入设置 -->
             <div class="checkbox-row" style="margin-top: 12px;">
               <input type="checkbox" id="embedImages">
-              <label for="embedImages">将图片嵌入笔记（Base64）<span class="badge badge-new">新</span></label>
+              <label for="embedImages"><span data-i18n="content.embedImages">将图片嵌入笔记（Base64）</span><span class="badge badge-new" data-i18n="badges.new">新</span></label>
             </div>
 
             <div class="image-settings-panel disabled" id="imageSettingsPanel">
               <div class="warning-text" style="margin-top: 0;">
-                <strong>注意：</strong>启用后图片会以 Base64 格式嵌入 Markdown 文件中。
-                优点是单文件完整保存，缺点是文件体积会显著增大。
+                <strong data-i18n="content.embedWarning1Title">注意：</strong><span data-i18n="content.embedWarning1Content">启用后图片会以 Base64 格式嵌入 Markdown 文件中。优点是单文件完整保存，缺点是文件体积会显著增大。</span>
               </div>
               <div class="warning-text" style="margin-top: 8px; background: #fff3cd; border-color: #ffc107;">
-                <strong>⚠️ 重要：</strong>图片嵌入会使文件变大，<strong>必须启用上方的"使用 Advanced URI 插件"</strong>选项才能正常保存到 Obsidian。
+                <strong data-i18n="content.embedWarning2Title">⚠️ 重要：</strong><span data-i18n="content.embedWarning2Content">图片嵌入会使文件变大，必须启用上方的"使用 Advanced URI 插件"选项才能正常保存到 Obsidian。</span>
               </div>
 
               <div class="form-group" style="margin-top: 12px;">
@@ -829,7 +828,7 @@
 
               <div class="checkbox-row">
                 <input type="checkbox" id="imageSkipGif">
-                <label for="imageSkipGif">跳过 GIF 动图（保留原链接）</label>
+                <label for="imageSkipGif" data-i18n="content.skipGif">跳过 GIF 动图（保留原链接）</label>
               </div>
               <div class="help-text" style="margin-left: 24px;" data-i18n="content.skipGifHelpDetail">GIF 转换后会失去动画效果</div>
             </div>
@@ -852,14 +851,28 @@
 
             <div id="commentOptions" class="sub-options disabled">
               <div class="number-input-row">
-                <label for="commentCount">评论数量：</label>
-                <input type="number" id="commentCount" value="100" min="1" max="3000">
-                <span>条（最多3000）</span>
+                <label for="commentCount" data-i18n="comments.commentsCount">评论数量：</label>
+                <input type="number" id="commentCount" value="100" min="0" max="10000">
+                <span style="color: #6b7280;" data-i18n="comments.commentsRange">条（0-10000）</span>
+                <input type="checkbox" id="saveAllComments" style="margin-left: 16px;">
+                <label for="saveAllComments" style="font-weight: normal;" data-i18n="comments.saveAllComments">保存全部</label>
               </div>
+              <p id="allCommentsWarning" style="display: none; color: #f59e0b; font-size: 12px; margin: 4px 0 8px 0;" data-i18n="comments.saveAllWarning">
+                ⚠️ 评论较多时可能需要较长时间加载
+              </p>
 
               <div class="checkbox-row">
                 <input type="checkbox" id="foldComments">
-                <label for="foldComments">折叠评论（使用HTML details标签）</label>
+                <label for="foldComments" data-i18n="comments.collapseComments">折叠评论（使用HTML details标签）</label>
+              </div>
+
+              <div class="tip-box" style="margin-top: 12px; background: #f0fdf4; border-left-color: #22c55e;">
+                <p>
+                  <strong data-i18n="comments.fetchExplainTitle">评论获取说明：</strong><br>
+                  <span data-i18n="comments.fetchExplain1">• 评论数 ≤30 条：从当前页面提取（快速）</span><br>
+                  <span data-i18n="comments.fetchExplain2">• 评论数 >30 条或勾选"保存全部"：通过API获取（完整，解决懒加载问题）</span><br>
+                  <span data-i18n="comments.fetchExplain3">• 超过500条评论时会显示加载进度</span>
+                </p>
               </div>
             </div>
           </div>
@@ -875,11 +888,11 @@
 
       <div class="tip-box">
         <p>
-          <strong>使用方法：</strong><br>
-          - <strong>单击</strong>链接按钮 → 保存到 Obsidian/飞书<br>
-          - <strong>双击</strong>链接按钮 → 复制链接<br>
-          - <strong>Ctrl+Shift+S</strong>（Mac: ⌘+Shift+S）→ 快捷键保存<br>
-          <strong>飞书配置教程：</strong><a href="https://open.feishu.cn/document/home/introduction-to-custom-app-development/self-built-application-development-process" target="_blank">创建飞书自建应用</a>
+          <strong data-i18n="usage.title">使用方法：</strong><br>
+          <span data-i18n="usage.singleClick">- 单击链接按钮 → 保存到 Obsidian/飞书</span><br>
+          <span data-i18n="usage.doubleClick">- 双击链接按钮 → 复制链接</span><br>
+          <span data-i18n="usage.shortcut">- Ctrl+Shift+S（Mac: ⌘+Shift+S）→ 快捷键保存</span><br>
+          <strong data-i18n="usage.feishuTutorial">飞书配置教程：</strong><a href="https://open.feishu.cn/document/home/introduction-to-custom-app-development/self-built-application-development-process" target="_blank" data-i18n="usage.feishuTutorialLink">创建飞书自建应用</a>
         </p>
       </div>
     </div>
