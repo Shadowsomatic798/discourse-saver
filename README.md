@@ -4,7 +4,10 @@
 
 通用 Discourse 论坛内容保存工具 - 一键保存任意 Discourse 论坛（如 LinuxDo、Discourse Meta、Rust Users 等数百个站点）的帖子和评论到 Obsidian、飞书多维表格或 Notion。
 
-> **V4.0.5 新增**：修复 Notion 多平台视频支持 - YouTube/Vimeo 原生播放，其他平台智能转为链接预览卡片
+> **V4.0.5 更新**：
+> - 多语言支持 - 设置页面支持中文/English 切换
+> - 评论 API 获取 - 通过 Discourse API 获取全部评论，解决懒加载限制
+> - 56+ 站点兼容 - 已测试 60 个 Discourse 站点，93.3% 通过率
 
 ## 浏览器支持
 
@@ -19,39 +22,132 @@
 
 ## 支持的论坛
 
-### 已测试站点（V3.6.0）
+### 已测试兼容站点（56个，通过率 93.3%）
 
-#### 中文 Discourse 论坛
+#### 编程语言社区 (12/12)
 
-| 站点 | URL | Discourse 版本 | 测试状态 |
-|-----|-----|---------------|---------|
-| **LinuxDo** | linux.do | 2026.3.0-latest | ✅ 完全兼容 |
-| **Emacs China** | emacs-china.org | 3.5.0.beta8-dev | ✅ 完全兼容 |
-| **Julia 中文社区** | discourse.juliacn.com | 3.2.0.beta5-dev | ✅ 完全兼容 |
-| **openSUSE 中文论坛** | forum.suse.org.cn | 3.4.7 | ✅ 完全兼容 |
-| **飞致云社区** | bbs.fit2cloud.com | 3.1.0.beta4 | ✅ 完全兼容 |
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Rust Users | users.rust-lang.org | ✅ |
+| Swift Forums | forums.swift.org | ✅ |
+| Go Forum | forum.golangbridge.org | ✅ |
+| Julia | discourse.julialang.org | ✅ |
+| Elixir Forum | elixirforum.com | ✅ |
+| Haskell | discourse.haskell.org | ✅ |
+| Scala Users | users.scala-lang.org | ✅ |
+| OCaml | discuss.ocaml.org | ✅ |
+| Crystal | forum.crystal-lang.org | ✅ |
+| Clojure | clojureverse.org | ✅ |
+| Purescript | discourse.purescript.org | ✅ |
+| Zig | ziggit.dev | ✅ |
 
-> 飞致云社区包含 1Panel、JumpServer、MeterSphere 等开源项目讨论区
+#### AI/ML社区 (3/3)
 
-#### 国际 Discourse 论坛
+| 站点 | URL | 状态 |
+|------|-----|------|
+| OpenAI Community | community.openai.com | ✅ |
+| Hugging Face | discuss.huggingface.co | ✅ |
+| PyTorch | discuss.pytorch.org | ✅ |
 
-| 站点 | URL | Discourse 版本 | 测试状态 |
-|-----|-----|---------------|---------|
-| **Discourse Meta** | meta.discourse.org | 2026.3.0-latest | ✅ 完全兼容 |
-| **Cloudflare Community** | community.cloudflare.com | 2026.3.0-latest | ✅ 完全兼容 |
+#### Web框架 (3/4)
 
-### 应支持站点（未测试）
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Django | forum.djangoproject.com | ✅ |
+| Ruby on Rails | discuss.rubyonrails.org | ✅ |
+| Ember | discuss.emberjs.com | ✅ |
+| Vue.js | forum.vuejs.org | ❌ API受限 |
 
-以下站点使用 Discourse 框架，理论上完全兼容：
+#### DevOps/云服务 (8/9)
 
-| 站点 | URL | 类型 |
-|-----|-----|------|
-| **Rust Users** | users.rust-lang.org | 编程语言社区 |
-| **Docker Community** | forums.docker.com | 技术社区 |
-| **Brave Community** | community.brave.com | 浏览器社区 |
-| **Envato Forums** | forums.envato.com | 商业论坛 |
-| **Hugo Discourse** | discourse.gohugo.io | 技术社区 |
-| **OpenAI Community** | community.openai.com | AI社区 |
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Docker Community | forums.docker.com | ✅ |
+| Kubernetes | discuss.kubernetes.io | ✅ |
+| Terraform (HashiCorp) | discuss.hashicorp.com | ✅ |
+| Ansible | forum.ansible.com | ✅ |
+| GitLab | forum.gitlab.com | ✅ |
+| CircleCI | discuss.circleci.com | ✅ |
+| Fly.io | community.fly.io | ✅ |
+| Vercel | vercel.community | ✅ |
+| Rancher | forums.rancher.com | ❌ API受限 |
+
+#### 数据库 (5/5)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Elastic | discuss.elastic.co | ✅ |
+| MongoDB | mongodb.com/community/forums | ✅ |
+| Redis | forum.redis.io | ✅ |
+| CockroachDB | forum.cockroachlabs.com | ✅ |
+| TimescaleDB | timescale.com/forum | ✅ |
+
+#### 开源项目 (8/8)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Fedora | discussion.fedoraproject.org | ✅ |
+| Ubuntu | discourse.ubuntu.com | ✅ |
+| NixOS | discourse.nixos.org | ✅ |
+| Home Assistant | community.home-assistant.io | ✅ |
+| Hugo | discourse.gohugo.io | ✅ |
+| Let's Encrypt | community.letsencrypt.org | ✅ |
+| Grafana | community.grafana.com | ✅ |
+| Tor Project | forum.torproject.net | ✅ |
+
+#### 游戏开发 (5/5)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Godot | forum.godotengine.org | ✅ |
+| Defold | forum.defold.com | ✅ |
+| Phaser | phaser.discourse.group | ✅ |
+| Roblox DevForum | devforum.roblox.com | ✅ |
+| Unreal Engine | forums.unrealengine.com | ✅ |
+
+#### 区块链/Web3 (4/4)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Ethereum Research | ethresear.ch | ✅ |
+| Polkadot | forum.polkadot.network | ✅ |
+| Cosmos | forum.cosmos.network | ✅ |
+| Near Protocol | gov.near.org | ✅ |
+
+#### 生产力工具 (2/2)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Obsidian | forum.obsidian.md | ✅ |
+| Logseq | discuss.logseq.com | ✅ |
+
+#### 浏览器/隐私 (2/2)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Brave Community | community.brave.com | ✅ |
+| Bitwarden | community.bitwarden.com | ✅ |
+
+#### 其他 (3/4)
+
+| 站点 | URL | 状态 |
+|------|-----|------|
+| Netlify | answers.netlify.com | ✅ |
+| Webflow | forum.webflow.com | ✅ |
+| Linux.do | linux.do | ✅ |
+| Atom/Electron | discuss.atom.io | ❌ 已关闭 |
+
+### 需要登录的站点
+
+以下站点需要登录才能访问，插件在登录后应可正常工作：
+
+| 站点 | URL | 备注 |
+|------|-----|------|
+| Envato Forums | forums.envato.com | 商业论坛 |
+| Revolut Community | community.revolut.com | 金融服务 |
+| Cloudflare Community | community.cloudflare.com | 需要账号 |
+| Unity Discussions | discussions.unity.com | 开发者账号 |
+| Affinity Forum | forum.affinity.serif.com | 产品用户 |
 
 ### 非 Discourse 站点（不支持）
 
@@ -79,7 +175,16 @@
 
 ---
 
-## V3.6.0 新功能
+## V4.0.5 新功能
+
+| 特性 | 说明 |
+|-----|------|
+| **多语言支持** | 设置页面支持中文/English 切换 |
+| **评论 API 获取** | 通过 Discourse API 获取全部评论，解决懒加载限制 |
+| **保存全部评论** | 新增「保存全部」选项，评论数量支持 0-10000 条 |
+| **56+ 站点兼容** | 已测试 60 个 Discourse 站点，93.3% 通过率 |
+
+## V3.6.0 功能
 
 | 特性 | 说明 |
 |-----|------|
@@ -145,6 +250,10 @@
 ## 配置选项
 
 点击 Chrome 扩展图标 → 右键 → 「选项」
+
+### 多语言支持
+
+设置页面支持中英文切换，点击右上角的 **中文 / EN** 按钮即可切换语言。
 
 ### 插件状态
 
@@ -234,27 +343,27 @@
 | 配置项 | 说明 |
 |-------|------|
 | 保存评论区 | 是否保存评论（默认关闭） |
-| 评论数量 | 1-3000 条，默认 100 |
+| 评论数量 | 0-10000 条，默认 100 |
+| 保存全部 | 勾选后保存帖子的全部评论（通过 API 获取） |
 | 折叠评论 | 使用 `<details>` 标签折叠 |
 
 ---
 
-### ⚠️ 重要提示：浏览器评论获取限制
+### 评论获取说明
 
-**这是浏览器技术限制，不是插件 bug！**
+插件支持两种评论获取方式：
 
-由于浏览器技术限制，插件 **只能获取当前页面已加载的评论**。
+| 评论数量 | 获取方式 | 说明 |
+|---------|---------|------|
+| ≤30 条 | 页面提取 | 从当前页面 DOM 提取（快速） |
+| >30 条 或 勾选「保存全部」 | **API 获取** | 通过 Discourse API 获取完整评论（解决懒加载问题） |
 
-| 情况 | 说明 |
-|-----|------|
-| **原因** | LinuxDo（Discourse）采用懒加载，评论只有滚动到可视区域才会加载 |
-| **表现** | 未滚动加载的评论在页面 DOM 中不存在，插件无法获取 |
-| **解决** | 保存前先**滚动页面**，让更多评论加载出来 |
+**API 获取优势：**
+- 无需手动滚动页面
+- 可获取全部评论（不受懒加载限制）
+- 超过 500 条评论时显示加载进度
 
-**操作建议：**
-1. 保存前先滚动到页面底部，确保所需评论已加载
-2. 对于评论很多的帖子，可以按住 `End` 键快速滚动到底部
-3. 即使设置保存 1000 条评论，如果页面只加载了 50 条，也只能保存 50 条
+> **提示**：如果帖子评论超过 30 条，建议勾选「保存全部」以获取完整评论。
 
 ---
 
@@ -417,16 +526,17 @@
 
 ### Q1: 评论没有全部保存？
 
-**A:** 这是浏览器技术限制导致的，**不是插件bug**。
+**A:** 如果评论数量超过 30 条，请在设置中勾选「**保存全部**」选项。
 
-**原因：** 浏览器扩展只能访问当前页面已经加载渲染的 DOM 内容。LinuxDo（Discourse）论坛为了性能优化，采用懒加载机制，评论只有滚动到可视区域时才会加载。
+**原理说明：**
+- 评论 ≤30 条：从页面 DOM 提取（快速）
+- 评论 >30 条：通过 Discourse API 获取（完整，解决懒加载问题）
+- 勾选「保存全部」：强制使用 API 获取所有评论
 
-**解决方法：**
-1. 保存前先**滚动页面**，让更多评论加载出来
-2. 对于评论很多的帖子，可以按住 `End` 键快速滚动到底部
-3. 确认需要的评论都已显示在页面上后，再点击保存
-
-**注意：** 即使设置了保存 1000 条评论，如果页面只加载了 50 条，也只能保存 50 条。
+**操作建议：**
+1. 在设置中勾选「保存评论区」
+2. 勾选「保存全部」以获取完整评论
+3. 超过 500 条评论时会显示加载进度
 
 ### Q2: 点击链接按钮后没反应？
 
@@ -497,8 +607,21 @@
 
 ## 更新日志
 
-### v4.0.5 (2026-03-13)
+### v4.0.5 (2026-03-14)
 
+- **新增**：多语言支持（中文/English）
+  - 设置页面完整国际化
+  - 右上角一键切换语言
+- **新增**：评论 API 获取功能
+  - 通过 Discourse API 获取全部评论
+  - 解决懒加载导致只能获取 30 条评论的限制
+  - 新增「保存全部」选项
+  - 评论数量范围扩展至 0-10000 条
+  - 超过 500 条评论显示加载进度
+- **新增**：兼容性测试报告
+  - 测试 60 个 Discourse 站点
+  - 56 个站点通过测试（93.3% 通过率）
+  - 覆盖编程语言、AI/ML、DevOps、数据库等分类
 - **修复**：Notion 多平台视频支持改进
   - YouTube、Vimeo 使用 Notion 原生 video 块（可直接播放）
   - Bilibili、优酷、TikTok、QQ视频、西瓜视频、Facebook 改用 bookmark 块
