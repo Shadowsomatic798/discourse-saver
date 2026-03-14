@@ -4,7 +4,10 @@
 
 Save **any Discourse forum** posts and comments to **Obsidian**, **Feishu Bitable**, or **Notion** with one click.
 
-> **V4.0.5 New**: Fixed Notion multi-platform video support - YouTube/Vimeo native playback, other platforms use bookmark cards
+> **V4.0.5 Updates**:
+> - Multi-language Support - Settings page supports Chinese/English toggle
+> - Comments API Fetch - Fetch all comments via Discourse API, solving lazy-loading limitation
+> - 56+ Sites Compatible - Tested 60 Discourse sites, 93.3% pass rate
 
 ## Browser Support
 
@@ -19,48 +22,141 @@ Save **any Discourse forum** posts and comments to **Obsidian**, **Feishu Bitabl
 
 ## Supported Forums
 
-### Tested Sites (V3.6.0)
+### Tested Compatible Sites (56 sites, 93.3% pass rate)
 
-#### Chinese Discourse Forums
+#### Programming Language Communities (12/12)
 
-| Site | URL | Discourse Version | Test Status |
-|------|-----|------------------|-------------|
-| **LinuxDo** | linux.do | 2026.3.0-latest | ✅ Fully Compatible |
-| **Emacs China** | emacs-china.org | 3.5.0.beta8-dev | ✅ Fully Compatible |
-| **Julia Chinese Community** | discourse.juliacn.com | 3.2.0.beta5-dev | ✅ Fully Compatible |
-| **openSUSE Chinese Forum** | forum.suse.org.cn | 3.4.7 | ✅ Fully Compatible |
-| **FIT2CLOUD Community** | bbs.fit2cloud.com | 3.1.0.beta4 | ✅ Fully Compatible |
+| Site | URL | Status |
+|------|-----|--------|
+| Rust Users | [users.rust-lang.org](https://users.rust-lang.org) | ✅ |
+| Swift Forums | [forums.swift.org](https://forums.swift.org) | ✅ |
+| Go Forum | [forum.golangbridge.org](https://forum.golangbridge.org) | ✅ |
+| Julia | [discourse.julialang.org](https://discourse.julialang.org) | ✅ |
+| Elixir Forum | [elixirforum.com](https://elixirforum.com) | ✅ |
+| Haskell | [discourse.haskell.org](https://discourse.haskell.org) | ✅ |
+| Scala Users | [users.scala-lang.org](https://users.scala-lang.org) | ✅ |
+| OCaml | [discuss.ocaml.org](https://discuss.ocaml.org) | ✅ |
+| Crystal | [forum.crystal-lang.org](https://forum.crystal-lang.org) | ✅ |
+| Clojure | [clojureverse.org](https://clojureverse.org) | ✅ |
+| Purescript | [discourse.purescript.org](https://discourse.purescript.org) | ✅ |
+| Zig | [ziggit.dev](https://ziggit.dev) | ✅ |
 
-> FIT2CLOUD Community includes discussions for 1Panel, JumpServer, MeterSphere and other open source projects
+#### AI/ML Communities (3/3)
 
-#### International Discourse Forums
+| Site | URL | Status |
+|------|-----|--------|
+| OpenAI Community | [community.openai.com](https://community.openai.com) | ✅ |
+| Hugging Face | [discuss.huggingface.co](https://discuss.huggingface.co) | ✅ |
+| PyTorch | [discuss.pytorch.org](https://discuss.pytorch.org) | ✅ |
 
-| Site | URL | Discourse Version | Test Status |
-|------|-----|------------------|-------------|
-| **Discourse Meta** | meta.discourse.org | 2026.3.0-latest | ✅ Fully Compatible |
-| **Cloudflare Community** | community.cloudflare.com | 2026.3.0-latest | ✅ Fully Compatible |
+#### Web Frameworks (3/4)
 
-### Should Work (Untested)
+| Site | URL | Status |
+|------|-----|--------|
+| Django | [forum.djangoproject.com](https://forum.djangoproject.com) | ✅ |
+| Ruby on Rails | [discuss.rubyonrails.org](https://discuss.rubyonrails.org) | ✅ |
+| Ember | [discuss.emberjs.com](https://discuss.emberjs.com) | ✅ |
+| Vue.js | [forum.vuejs.org](https://forum.vuejs.org) | ❌ API Limited |
 
-The following sites use Discourse framework and should be fully compatible:
+#### DevOps/Cloud Services (8/9)
 
-| Site | URL | Type |
-|------|-----|------|
-| **Rust Users** | users.rust-lang.org | Programming Language Community |
-| **Docker Community** | forums.docker.com | Tech Community |
-| **Brave Community** | community.brave.com | Browser Community |
-| **Envato Forums** | forums.envato.com | Business Forum |
-| **Hugo Discourse** | discourse.gohugo.io | Tech Community |
-| **OpenAI Community** | community.openai.com | AI Community |
+| Site | URL | Status |
+|------|-----|--------|
+| Docker Community | [forums.docker.com](https://forums.docker.com) | ✅ |
+| Kubernetes | [discuss.kubernetes.io](https://discuss.kubernetes.io) | ✅ |
+| Terraform (HashiCorp) | [discuss.hashicorp.com](https://discuss.hashicorp.com) | ✅ |
+| Ansible | [forum.ansible.com](https://forum.ansible.com) | ✅ |
+| GitLab | [forum.gitlab.com](https://forum.gitlab.com) | ✅ |
+| CircleCI | [discuss.circleci.com](https://discuss.circleci.com) | ✅ |
+| Fly.io | [community.fly.io](https://community.fly.io) | ✅ |
+| Vercel | [vercel.community](https://vercel.community) | ✅ |
+| Rancher | [forums.rancher.com](https://forums.rancher.com) | ❌ API Limited |
+
+#### Databases (5/5)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Elastic | [discuss.elastic.co](https://discuss.elastic.co) | ✅ |
+| MongoDB | [mongodb.com/community/forums](https://www.mongodb.com/community/forums) | ✅ |
+| Redis | [forum.redis.io](https://forum.redis.io) | ✅ |
+| CockroachDB | [forum.cockroachlabs.com](https://forum.cockroachlabs.com) | ✅ |
+| TimescaleDB | [timescale.com/forum](https://www.timescale.com/forum) | ✅ |
+
+#### Open Source Projects (8/8)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Fedora | [discussion.fedoraproject.org](https://discussion.fedoraproject.org) | ✅ |
+| Ubuntu | [discourse.ubuntu.com](https://discourse.ubuntu.com) | ✅ |
+| NixOS | [discourse.nixos.org](https://discourse.nixos.org) | ✅ |
+| Home Assistant | [community.home-assistant.io](https://community.home-assistant.io) | ✅ |
+| Hugo | [discourse.gohugo.io](https://discourse.gohugo.io) | ✅ |
+| Let's Encrypt | [community.letsencrypt.org](https://community.letsencrypt.org) | ✅ |
+| Grafana | [community.grafana.com](https://community.grafana.com) | ✅ |
+| Tor Project | [forum.torproject.net](https://forum.torproject.net) | ✅ |
+
+#### Game Development (5/5)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Godot | [forum.godotengine.org](https://forum.godotengine.org) | ✅ |
+| Defold | [forum.defold.com](https://forum.defold.com) | ✅ |
+| Phaser | [phaser.discourse.group](https://phaser.discourse.group) | ✅ |
+| Roblox DevForum | [devforum.roblox.com](https://devforum.roblox.com) | ✅ |
+| Unreal Engine | [forums.unrealengine.com](https://forums.unrealengine.com) | ✅ |
+
+#### Blockchain/Web3 (4/4)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Ethereum Research | [ethresear.ch](https://ethresear.ch) | ✅ |
+| Polkadot | [forum.polkadot.network](https://forum.polkadot.network) | ✅ |
+| Cosmos | [forum.cosmos.network](https://forum.cosmos.network) | ✅ |
+| Near Protocol | [gov.near.org](https://gov.near.org) | ✅ |
+
+#### Productivity Tools (2/2)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Obsidian | [forum.obsidian.md](https://forum.obsidian.md) | ✅ |
+| Logseq | [discuss.logseq.com](https://discuss.logseq.com) | ✅ |
+
+#### Browser/Privacy (2/2)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Brave Community | [community.brave.com](https://community.brave.com) | ✅ |
+| Bitwarden | [community.bitwarden.com](https://community.bitwarden.com) | ✅ |
+
+#### Others (3/4)
+
+| Site | URL | Status |
+|------|-----|--------|
+| Netlify | [answers.netlify.com](https://answers.netlify.com) | ✅ |
+| Webflow | [forum.webflow.com](https://forum.webflow.com) | ✅ |
+| Linux.do | [linux.do](https://linux.do) | ✅ |
+| Atom/Electron | [discuss.atom.io](https://discuss.atom.io) | ❌ Closed |
+
+### Sites Requiring Login
+
+The following sites require login to access, plugin should work normally after login:
+
+| Site | URL | Notes |
+|------|-----|-------|
+| Envato Forums | [forums.envato.com](https://forums.envato.com) | Business Forum |
+| Revolut Community | [community.revolut.com](https://community.revolut.com) | Financial Services |
+| Cloudflare Community | [community.cloudflare.com](https://community.cloudflare.com) | Requires Account |
+| Unity Discussions | [discussions.unity.com](https://discussions.unity.com) | Developer Account |
+| Affinity Forum | [forum.affinity.serif.com](https://forum.affinity.serif.com) | Product Users |
 
 ### Non-Discourse Sites (Not Supported)
 
 | Site | URL | Actual Framework | Notes |
 |------|-----|-----------------|-------|
-| **Ruby China** | ruby-china.org | Homeland | Similar appearance but different framework |
-| **V2EX** | v2ex.com | Custom | Not Discourse |
-| **NodeSeek** | nodeseek.com | Custom | Not Discourse |
-| **LearnKu** | learnku.com | Custom | Not Discourse |
+| **Ruby China** | [ruby-china.org](https://ruby-china.org) | Homeland | Similar appearance but different framework |
+| **V2EX** | [v2ex.com](https://v2ex.com) | Custom | Not Discourse |
+| **NodeSeek** | [nodeseek.com](https://nodeseek.com) | Custom | Not Discourse |
+| **LearnKu** | [learnku.com](https://learnku.com) | Custom | Not Discourse |
 
 > **Note**: The above sites are tech communities but don't use Discourse framework, thus not supported.
 
@@ -79,7 +175,16 @@ For privately deployed or undetected Discourse sites, you can manually add them 
 
 ---
 
-## V3.6.0 New Features
+## V4.0.5 New Features
+
+| Feature | Description |
+|---------|-------------|
+| **Multi-language Support** | Settings page supports Chinese/English toggle |
+| **Comments API Fetch** | Fetch all comments via Discourse API, solving lazy-loading limitation |
+| **Save All Comments** | New "Save All" option, comment count supports 0-10000 |
+| **56+ Sites Compatible** | Tested 60 Discourse sites, 93.3% pass rate |
+
+## V3.6.0 Features
 
 | Feature | Description |
 |---------|-------------|
@@ -145,6 +250,10 @@ For privately deployed or undetected Discourse sites, you can manually add them 
 ## Configuration Options
 
 Click Chrome extension icon → Right click → "Options"
+
+### Multi-language Support
+
+Settings page supports Chinese/English toggle, click **中文 / EN** button in top right corner to switch language.
 
 ### Plugin Status
 
@@ -234,27 +343,27 @@ Click Chrome extension icon → Right click → "Options"
 | Option | Description |
 |--------|-------------|
 | Save Comments | Whether to save comments (default off) |
-| Comment Count | 1-3000 comments, default 100 |
+| Comment Count | 0-10000 comments, default 100 |
+| Save All | When checked, save all post comments (via API fetch) |
 | Collapse Comments | Use `<details>` tag to collapse |
 
 ---
 
-### ⚠️ Important Note: Browser Comment Retrieval Limitation
+### Comment Fetching
 
-**This is a browser technical limitation, not a plugin bug!**
+Plugin supports two comment fetching methods:
 
-Due to browser technical limitations, the plugin **can only retrieve comments already loaded on the current page**.
+| Comment Count | Fetch Method | Description |
+|--------------|--------------|-------------|
+| ≤30 comments | Page Extract | Extract from current page DOM (fast) |
+| >30 comments or "Save All" checked | **API Fetch** | Fetch complete comments via Discourse API (solves lazy-loading) |
 
-| Situation | Description |
-|-----------|-------------|
-| **Reason** | LinuxDo (Discourse) uses lazy loading, comments only load when scrolled into viewport |
-| **Behavior** | Comments not scrolled into view don't exist in page DOM, plugin cannot retrieve |
-| **Solution** | Before saving, **scroll the page** to load more comments |
+**API Fetch Advantages:**
+- No need to manually scroll page
+- Can fetch all comments (not limited by lazy-loading)
+- Shows loading progress when >500 comments
 
-**Operation Suggestions:**
-1. Before saving, scroll to page bottom to ensure needed comments are loaded
-2. For posts with many comments, hold `End` key to quickly scroll to bottom
-3. Even if set to save 1000 comments, if page only loaded 50, only 50 can be saved
+> **Tip**: If post has more than 30 comments, recommend checking "Save All" to get complete comments.
 
 ---
 
@@ -415,16 +524,17 @@ Thanks for sharing!
 
 ### Q1: Not all comments saved?
 
-**A:** This is a browser technical limitation, **not a plugin bug**.
+**A:** If comment count exceeds 30, please check "**Save All**" option in settings.
 
-**Reason:** Browser extensions can only access DOM content already loaded and rendered on the current page. LinuxDo (Discourse) forum uses lazy loading for performance optimization, comments only load when scrolled into viewport.
+**How it works:**
+- ≤30 comments: Extract from page DOM (fast)
+- >30 comments: Fetch via Discourse API (complete, solves lazy-loading)
+- Check "Save All": Force API fetch for all comments
 
-**Solution:**
-1. Before saving, **scroll the page** to load more comments
-2. For posts with many comments, hold `End` key to quickly scroll to bottom
-3. After confirming needed comments are displayed on page, click save
-
-**Note:** Even if set to save 1000 comments, if page only loaded 50, only 50 can be saved.
+**Suggestions:**
+1. Check "Save Comments" in settings
+2. Check "Save All" to get complete comments
+3. Shows loading progress when >500 comments
 
 ### Q2: No response after clicking link button?
 
@@ -494,6 +604,32 @@ See [NOTION-GUIDE.html](NOTION-GUIDE.html)
 ---
 
 ## Changelog
+
+### v4.0.5 (2026-03-14)
+
+- **New**: Multi-language support (Chinese/English)
+  - Complete settings page internationalization
+  - One-click language toggle in top right corner
+- **New**: Comments API fetch functionality
+  - Fetch all comments via Discourse API
+  - Solves lazy-loading limitation of only getting ~30 comments
+  - New "Save All" option
+  - Comment count range extended to 0-10000
+  - Shows loading progress when >500 comments
+- **New**: Compatibility test report
+  - Tested 60 Discourse sites
+  - 56 sites passed (93.3% pass rate)
+  - Covers Programming Languages, AI/ML, DevOps, Databases, etc.
+- **Fix**: Notion multi-platform video support improvements
+  - YouTube, Vimeo use Notion native video block (can play directly)
+  - Bilibili, Youku, TikTok, QQ Video, Xigua Video, Facebook use bookmark block
+  - Solves Notion not natively supporting Chinese video platforms
+- **New**: Notion iframe parsing supports more platforms
+  - Added Youku `player.youku.com/embed/` parsing
+  - Added TikTok `tiktok.com/embed/` parsing
+  - Added QQ Video `v.qq.com` parsing
+  - Added Xigua Video `ixigua.com/iframe/` parsing
+  - Added Facebook `facebook.com/plugins/video` parsing
 
 ### v4.0.2 (2026-03-12)
 
