@@ -2748,7 +2748,8 @@
         color: var(--text-muted);
       }
 
-      .footer a { color: var(--accent-color); text-decoration: none; }
+      .footer a { color: var(--accent-color); text-decoration: underline; }
+      .footer a:hover { opacity: 0.8; }
 
       /* ========== 响应式设计 ========== */
       /* 平板 */
