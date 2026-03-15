@@ -1618,7 +1618,10 @@
             });
 
             if (htmlContent) {
-              const safeFileName = sanitizeFileName(title) || 'discourse-export';
+              // V4.3.6: HTML文件命名与Obsidian保持一致，区分主帖和分帖
+              const safeFileName = isSingleCommentMode
+                ? `${sanitizeFileName(title)}-${targetPostNumber}楼`
+                : (sanitizeFileName(title) || 'discourse-export');
               downloadFile(htmlContent, `${safeFileName}.html`, 'text/html;charset=utf-8');
               showNotification('HTML 文件已导出', 'success');
               console.log('[Discourse Saver] HTML 文件导出成功');
