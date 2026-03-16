@@ -136,7 +136,7 @@
     <div class="header">
       <h1>Discourse Saver</h1>
       <p>通用 Discourse 论坛内容保存工具</p>
-      <span class="version">v4.5.0 油猴版</span>
+      <span class="version">v4.5.1 油猴版</span>
     </div>
     
     <div class="content">
@@ -238,7 +238,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.0
+// @version      4.5.1
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       Discourse Saver Team
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -1140,22 +1140,44 @@ ${tagsYaml}
       const folderPath = config.folderPath || 'Discourse收集箱';
       const encode = (str) => encodeURIComponent(str);
 
+      // 计算 URL 编码后的内容长度
+      const encodedLength = encode(markdown).length;
+      // URL 长度限制约 2MB，但为安全起见设置 50KB 阈值使用剪贴板模式
+      const URL_LENGTH_THRESHOLD = 50000;
+      const useClipboard = encodedLength > URL_LENGTH_THRESHOLD;
+
       let obsidianUrl;
       if (config.useAdvancedUri) {
-        // Advanced URI 插件支持 mode=overwrite 实现覆盖
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`filepath=${encode(`${folderPath}/${fileName}.md`)}`);
-        parts.push(`data=${encode(markdown)}`);
+
+        if (useClipboard) {
+          // 内容过大，使用剪贴板模式（解决 Base64 图片导致 URL 超长问题）
+          GM_setClipboard(markdown, 'text');
+          parts.push(`clipboard=true`);
+          console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，使用剪贴板模式`);
+        } else {
+          parts.push(`data=${encode(markdown)}`);
+        }
         parts.push(`mode=overwrite`);  // 覆盖已存在的文件
         obsidianUrl = `obsidian://advanced-uri?${parts.join('&')}`;
       } else {
-        // 普通 URI 不支持覆盖，会创建新文件或提示
+        // 普通 URI 模式
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`file=${encode(`${folderPath}/${fileName}`)}`);
-        parts.push(`content=${encode(markdown)}`);
-        parts.push(`overwrite=true`);  // 尝试覆盖（部分版本支持）
+
+        if (useClipboard) {
+          // 普通模式不支持剪贴板，提示用户手动粘贴
+          GM_setClipboard(markdown, 'text');
+          // 创建空文件，用户需手动粘贴
+          parts.push(`content=${encode('<!-- 内容已复制到剪贴板，请按 Ctrl+V / Cmd+V 粘贴 -->')}`);
+          alert('内容过大，已复制到剪贴板。\n\n请在 Obsidian 打开文件后按 Ctrl+V (Mac: Cmd+V) 粘贴。');
+        } else {
+          parts.push(`content=${encode(markdown)}`);
+        }
+        parts.push(`overwrite=true`);
         obsidianUrl = `obsidian://new?${parts.join('&')}`;
       }
 
@@ -1974,7 +1996,7 @@ ${tagsYaml}
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
         <div class="ds-settings-panel">
-          <h2>📝 Discourse Saver 设置 (V4.5.0)</h2>
+          <h2>📝 Discourse Saver 设置 (V4.5.1)</h2>
 
           <div class="ds-section-title">保存目标</div>
 
@@ -2205,7 +2227,7 @@ ${tagsYaml}
       GM_registerMenuCommand('📑 仅保存到 Notion', () => SaveModule.saveToNotionOnly(null));
       GM_registerMenuCommand('📄 仅导出为 HTML', () => SaveModule.exportHtmlOnly(null));
 
-      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.0)');
+      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.1)');
     }
 
     return { init, showSettingsPanel };
