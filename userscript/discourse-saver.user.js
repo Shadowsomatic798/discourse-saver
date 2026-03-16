@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.10
+// @version      4.6.0
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -560,95 +560,130 @@
       const author = authorElement ? authorElement.textContent.trim() : '未知作者';
       const topicId = window.location.pathname.match(/\/t\/[^/]+\/(\d+)/)?.[1];
 
-      // 提取分类 - v4.5.9 超级增强版
+      // 提取分类 - v4.6.0 终极增强版（过滤图标）
       let category = '';
 
+      // 辅助函数：从元素中提取纯文本（过滤SVG图标）
+      function extractTextWithoutIcons(element) {
+        if (!element) return '';
+        // 克隆元素以避免修改原始 DOM
+        const clone = element.cloneNode(true);
+        // 删除所有 SVG 和图标元素
+        clone.querySelectorAll('svg, .d-icon, .svg-icon, [class*="icon"], use').forEach(el => el.remove());
+        // 获取纯文本
+        return clone.textContent.trim();
+      }
+
+      // 方法0（最优先）: Linux.do 专用 - 查找第一个分类徽章
+      console.log('[Discourse Saver] 开始提取分类...');
+      const badgeCategoryContainers = document.querySelectorAll('.badge-category-parent-box, .badge-category-bg, .badge-category, .topic-category .badge-wrapper');
+      for (const container of badgeCategoryContainers) {
+        // 优先查找专门的名称元素
+        const nameEl = container.querySelector('.badge-category__name, .badge-category-name, .category-name');
+        if (nameEl) {
+          const text = nameEl.textContent.trim();
+          if (text && text.length > 0 && text.length < 100) {
+            category = text;
+            console.log(`[Discourse Saver] 方法0找到分类: "${category}" (从badge名称元素)`);
+            break;
+          }
+        }
+        // 如果没有名称元素，提取过滤图标后的文本
+        if (!category) {
+          const text = extractTextWithoutIcons(container);
+          if (text && text.length > 0 && text.length < 100) {
+            category = text;
+            console.log(`[Discourse Saver] 方法0找到分类: "${category}" (从badge容器过滤图标后)`);
+            break;
+          }
+        }
+      }
+
       // 方法1: DOM 选择器 - 覆盖各种可能的情况
-      const categorySelectors = [
-        // Discourse 标准选择器
-        '.topic-category .badge-category__name',
-        '.badge-category-bg .badge-category__name',
-        '.category-name',
-        '.badge-wrapper .badge-category-name',
-        '[itemprop="articleSection"]',
-        // 更多变体
-        '.topic-category .badge-category-name',
-        '.topic-header-extra .badge-category__name',
-        '.topic-header-extra .badge-category-name',
-        '#topic-title .badge-category__name',
-        '#topic-title .badge-category-name',
-        '.title-wrapper .badge-category__name',
-        '.title-wrapper .badge-category-name',
-        // 链接形式的分类
-        'a.badge-category__wrapper',
-        'a.badge-wrapper span.badge-category__name',
-        'a.badge-wrapper .badge-category-name',
-        // 面包屑中的分类
-        '.topic-category a[href*="/c/"]',
-        '.breadcrumb .category-name',
-        // Linux.do 特殊选择器
-        '.category-breadcrumb .badge-category__name',
-        '.category-breadcrumb .badge-category-name',
-        // 更多 Linux.do 可能的选择器
-        '.topic-category span[class*="badge"]',
-        '.topic-category span.d-icon + span',
-        '.topic-category a span:not(.d-icon)',
-        '.extra-info-wrapper .badge-category__name',
-        '.extra-info-wrapper .badge-category-name',
-        '.extra-info .badge-category__name',
-        '.extra-info .badge-category-name',
-        // 带有分类颜色背景的元素
-        'span[style*="background-color"][class*="badge"]',
-        '[class*="category"][class*="badge"] span:last-child',
-        '.topic-category [class*="badge"] span:not([class*="icon"])',
-        // 分类链接内的文本
-        'a[href*="/c/"] .badge-category__name',
-        'a[href*="/c/"] .badge-category-name',
-        'a[href*="/c/"] span.category-name'
-      ];
-
-      for (const selector of categorySelectors) {
-        try {
-          const categoryBadge = document.querySelector(selector);
-          if (categoryBadge) {
-            const text = categoryBadge.textContent.trim();
-            if (text && text.length > 0 && text.length < 100) {
-              category = text;
-              console.log(`[Discourse Saver] 方法1找到分类: "${category}" (选择器: ${selector})`);
-              break;
-            }
-          }
-        } catch (e) {
-          // 忽略选择器错误
-        }
-      }
-
-      // 方法2: 查找 topic-category 容器内的所有文本
       if (!category) {
-        const topicCategoryEl = document.querySelector('.topic-category') ||
-                                document.querySelector('.extra-info-wrapper .topic-category') ||
-                                document.querySelector('#topic-title .topic-category');
-        if (topicCategoryEl) {
-          // 获取所有非图标的文本节点
-          const walker = document.createTreeWalker(
-            topicCategoryEl,
-            NodeFilter.SHOW_TEXT,
-            null,
-            false
-          );
-          let node;
-          while (node = walker.nextNode()) {
-            const text = node.textContent.trim();
-            if (text && text.length > 0 && text.length < 50) {
-              category = text;
-              console.log(`[Discourse Saver] 方法2找到分类: "${category}" (从topic-category文本节点)`);
-              break;
+        const categorySelectors = [
+          // Discourse 标准选择器
+          '.topic-category .badge-category__name',
+          '.badge-category-bg .badge-category__name',
+          '.category-name',
+          '.badge-wrapper .badge-category-name',
+          '[itemprop="articleSection"]',
+          // 更多变体
+          '.topic-category .badge-category-name',
+          '.topic-header-extra .badge-category__name',
+          '.topic-header-extra .badge-category-name',
+          '#topic-title .badge-category__name',
+          '#topic-title .badge-category-name',
+          '.title-wrapper .badge-category__name',
+          '.title-wrapper .badge-category-name',
+          // Linux.do 更多选择器
+          '.extra-info-wrapper .badge-category__name',
+          '.extra-info-wrapper .badge-category-name',
+          '.extra-info .badge-category__name',
+          '.extra-info .badge-category-name',
+          // 分类链接内的文本
+          'a[href*="/c/"] .badge-category__name',
+          'a[href*="/c/"] .badge-category-name',
+          'a[href*="/c/"] span.category-name'
+        ];
+
+        for (const selector of categorySelectors) {
+          try {
+            const categoryBadge = document.querySelector(selector);
+            if (categoryBadge) {
+              const text = categoryBadge.textContent.trim();
+              if (text && text.length > 0 && text.length < 100) {
+                category = text;
+                console.log(`[Discourse Saver] 方法1找到分类: "${category}" (选择器: ${selector})`);
+                break;
+              }
+            }
+          } catch (e) {
+            // 忽略选择器错误
+          }
+        }
+      }
+
+      // 方法2: 查找 topic-category 容器并过滤图标
+      if (!category) {
+        const topicCategoryContainers = [
+          '.topic-category',
+          '.extra-info-wrapper .topic-category',
+          '#topic-title .topic-category',
+          '.title-wrapper .topic-category'
+        ];
+
+        for (const selector of topicCategoryContainers) {
+          const container = document.querySelector(selector);
+          if (container) {
+            // 优先找第一个链接
+            const firstLink = container.querySelector('a[href*="/c/"]');
+            if (firstLink) {
+              const text = extractTextWithoutIcons(firstLink);
+              if (text && text.length > 0 && text.length < 100) {
+                category = text;
+                console.log(`[Discourse Saver] 方法2找到分类: "${category}" (从topic-category链接)`);
+                break;
+              }
+            }
+            // 如果没有链接，从容器提取
+            if (!category) {
+              const text = extractTextWithoutIcons(container);
+              if (text && text.length > 0 && text.length < 100) {
+                // 可能包含多个分类/标签，取第一个
+                const firstPart = text.split(/[\s,，、]+/)[0];
+                if (firstPart && firstPart.length > 0) {
+                  category = firstPart;
+                  console.log(`[Discourse Saver] 方法2找到分类: "${category}" (从topic-category容器)`);
+                  break;
+                }
+              }
             }
           }
         }
       }
 
-      // 方法3: 查找所有指向分类的链接
+      // 方法3: 查找所有指向分类的链接（过滤图标版）
       if (!category) {
         const categoryLinks = document.querySelectorAll('a[href*="/c/"]');
         for (const link of categoryLinks) {
@@ -656,29 +691,13 @@
           const isInTitleArea = link.closest('#topic-title') ||
                                 link.closest('.topic-category') ||
                                 link.closest('.extra-info') ||
-                                link.closest('.title-wrapper');
+                                link.closest('.title-wrapper') ||
+                                link.closest('.topic-header');
           if (isInTitleArea) {
-            // 尝试从链接的最后一个 span 获取文本
-            const spans = link.querySelectorAll('span');
-            for (const span of spans) {
-              if (!span.classList.contains('d-icon') &&
-                  !span.querySelector('svg') &&
-                  !span.querySelector('use')) {
-                const text = span.textContent.trim();
-                if (text && text.length > 0 && text.length < 50) {
-                  category = text;
-                  console.log(`[Discourse Saver] 方法3找到分类: "${category}" (从分类链接span)`);
-                  break;
-                }
-              }
-            }
-            if (category) break;
-
-            // 尝试从链接本身获取文本
-            const linkText = link.textContent.trim();
-            if (linkText && linkText.length > 0 && linkText.length < 50 && !/^[\s\u200b]*$/.test(linkText)) {
-              category = linkText;
-              console.log(`[Discourse Saver] 方法3找到分类: "${category}" (从分类链接文本)`);
+            const text = extractTextWithoutIcons(link);
+            if (text && text.length > 0 && text.length < 100) {
+              category = text;
+              console.log(`[Discourse Saver] 方法3找到分类: "${category}" (从分类链接过滤图标后)`);
               break;
             }
           }
@@ -697,27 +716,35 @@
               // 查找 topic 数据
               for (const key in parsed) {
                 if (key.includes('topic')) {
-                  const topicData = JSON.parse(parsed[key]);
-                  if (topicData && topicData.category_id) {
-                    // 从 categories 数据中查找名称
-                    const categoriesKey = Object.keys(parsed).find(k => k.includes('categories'));
-                    if (categoriesKey) {
-                      const categoriesData = JSON.parse(parsed[categoriesKey]);
-                      const cat = categoriesData?.category_list?.categories?.find(
-                        c => c.id === topicData.category_id
-                      );
-                      if (cat && cat.name) {
-                        category = cat.name;
-                        console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从preloaded data)`);
+                  try {
+                    const topicData = JSON.parse(parsed[key]);
+                    if (topicData && topicData.category_id) {
+                      // 从 categories 数据中查找名称
+                      const categoriesKey = Object.keys(parsed).find(k => k.includes('categories'));
+                      if (categoriesKey) {
+                        const categoriesData = JSON.parse(parsed[categoriesKey]);
+                        const cat = categoriesData?.category_list?.categories?.find(
+                          c => c.id === topicData.category_id
+                        );
+                        if (cat && cat.name) {
+                          category = cat.name;
+                          console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从preloaded data categories)`);
+                          break;
+                        }
                       }
                     }
-                  }
-                  if (topicData && topicData.fancy_title && !category) {
-                    // 有些论坛把分类放在 details 里
-                    if (topicData.details && topicData.details.category_expert_name) {
-                      category = topicData.details.category_expert_name;
-                      console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从details)`);
+                    // 直接从 topic 数据获取 category
+                    if (!category && topicData && topicData.category) {
+                      if (typeof topicData.category === 'string') {
+                        category = topicData.category;
+                        console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从topic.category字符串)`);
+                      } else if (topicData.category.name) {
+                        category = topicData.category.name;
+                        console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从topic.category.name)`);
+                      }
                     }
+                  } catch (e) {
+                    // 忽略解析错误
                   }
                 }
               }
@@ -728,31 +755,32 @@
         }
       }
 
-      // 方法5: 从 URL 路径提取（最后的 fallback）
+      // 方法5: 从 Discourse 全局对象提取
       if (!category) {
-        // 尝试匹配 /t/topic-slug/123 中的话题 slug
-        const urlParts = window.location.pathname.split('/');
-        const tIndex = urlParts.indexOf('t');
-        if (tIndex > 0 && urlParts[tIndex - 1] && urlParts[tIndex - 1] !== '') {
-          // 前面可能是分类
-          const potentialCategory = decodeURIComponent(urlParts[tIndex - 1]).replace(/-/g, ' ');
-          if (potentialCategory && potentialCategory !== 'c' && potentialCategory.length < 50) {
-            category = potentialCategory;
-            console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从URL路径)`);
+        try {
+          if (typeof window.Discourse !== 'undefined') {
+            const topic = window.Discourse?.Topic?.current || window.Discourse?.__container__?.lookup('controller:topic')?.model;
+            if (topic && topic.category) {
+              category = topic.category.name || topic.category;
+              console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从Discourse对象)`);
+            }
           }
-        }
-
-        // 标准 /c/category/subcategory 路径
-        if (!category) {
-          const categoryMatch = window.location.pathname.match(/\/c\/([^/]+)/);
-          if (categoryMatch) {
-            category = decodeURIComponent(categoryMatch[1]).replace(/-/g, ' ');
-            console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从URL /c/ 路径)`);
-          }
+        } catch (e) {
+          console.log('[Discourse Saver] 方法5访问Discourse对象失败:', e.message);
         }
       }
 
-      // 方法6: 遍历所有带有特定样式的元素
+      // 方法6: 从 URL 路径提取（最后的 fallback）
+      if (!category) {
+        // 标准 /c/category/subcategory 路径
+        const categoryMatch = window.location.pathname.match(/\/c\/([^/]+)/);
+        if (categoryMatch) {
+          category = decodeURIComponent(categoryMatch[1]).replace(/-/g, ' ');
+          console.log(`[Discourse Saver] 方法6找到分类: "${category}" (从URL /c/ 路径)`);
+        }
+      }
+
+      // 方法7: 遍历所有带有特定样式的元素（过滤图标版）
       if (!category) {
         // 查找带有背景色样式的 span（分类通常有颜色）
         const allSpans = document.querySelectorAll('span[style*="background"], span[style*="color"]');
@@ -1759,6 +1787,134 @@ ${tagsYaml}
       return null;
     }
 
+    // 根据 URL 查找已存在的 Notion 页面（去重）
+    async function findExistingPageByUrl(token, databaseId, url, urlPropName) {
+      return new Promise((resolve, reject) => {
+        const filter = {
+          property: urlPropName,
+          url: { equals: url }
+        };
+
+        GM_xmlhttpRequest({
+          method: 'POST',
+          url: `https://api.notion.com/v1/databases/${databaseId}/query`,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Notion-Version': NOTION_API_VERSION,
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify({ filter, page_size: 1 }),
+          onload: function(response) {
+            if (response.status >= 200 && response.status < 300) {
+              const data = JSON.parse(response.responseText);
+              if (data.results && data.results.length > 0) {
+                console.log(`[Discourse Saver] 找到已存在的页面: ${data.results[0].id}`);
+                resolve(data.results[0]);
+              } else {
+                resolve(null);
+              }
+            } else {
+              console.warn('[Discourse Saver] 查询已存在页面失败:', response.responseText);
+              resolve(null); // 查询失败时继续创建新页面
+            }
+          },
+          onerror: function() {
+            resolve(null); // 网络错误时继续创建新页面
+          }
+        });
+      });
+    }
+
+    // 更新已存在的 Notion 页面
+    async function updateNotionPage(token, pageId, properties, children) {
+      // 先更新属性
+      await new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+          method: 'PATCH',
+          url: `https://api.notion.com/v1/pages/${pageId}`,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Notion-Version': NOTION_API_VERSION,
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify({ properties }),
+          onload: function(response) {
+            if (response.status >= 200 && response.status < 300) {
+              resolve(JSON.parse(response.responseText));
+            } else {
+              reject(new Error('更新页面属性失败'));
+            }
+          },
+          onerror: function() {
+            reject(new Error('网络请求失败'));
+          }
+        });
+      });
+
+      // 删除旧的内容块
+      const existingBlocks = await new Promise((resolve) => {
+        GM_xmlhttpRequest({
+          method: 'GET',
+          url: `https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Notion-Version': NOTION_API_VERSION
+          },
+          onload: function(response) {
+            if (response.status >= 200 && response.status < 300) {
+              const data = JSON.parse(response.responseText);
+              resolve(data.results || []);
+            } else {
+              resolve([]);
+            }
+          },
+          onerror: function() {
+            resolve([]);
+          }
+        });
+      });
+
+      // 删除每个旧块
+      for (const block of existingBlocks) {
+        await new Promise((resolve) => {
+          GM_xmlhttpRequest({
+            method: 'DELETE',
+            url: `https://api.notion.com/v1/blocks/${block.id}`,
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Notion-Version': NOTION_API_VERSION
+            },
+            onload: function() { resolve(); },
+            onerror: function() { resolve(); }
+          });
+        });
+      }
+
+      // 添加新的内容块
+      return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+          method: 'PATCH',
+          url: `https://api.notion.com/v1/blocks/${pageId}/children`,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Notion-Version': NOTION_API_VERSION,
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify({ children: children.slice(0, 100) }),
+          onload: function(response) {
+            if (response.status >= 200 && response.status < 300) {
+              resolve({ id: pageId, updated: true });
+            } else {
+              reject(new Error('更新页面内容失败'));
+            }
+          },
+          onerror: function() {
+            reject(new Error('网络请求失败'));
+          }
+        });
+      });
+    }
+
     // 保存到 Notion（使用 GM_xmlhttpRequest 解决 CORS）
     async function saveToNotion(markdown, metadata, config) {
       const token = config.notionToken;
@@ -1823,27 +1979,61 @@ ${tagsYaml}
         };
       }
 
-      // 分类 - 查找 select 类型的属性
+      // 分类 - 支持多种类型（select、multi_select、rich_text）
       console.log(`[Discourse Saver] metadata.category = "${metadata.category || '(空)'}"`);
-      const categoryProp = findMatchingProperty(dbProps, config.notionPropCategory || '分类', 'select');
-      if (categoryProp) {
+      // 先尝试 select 类型
+      let categoryProp = findMatchingProperty(dbProps, config.notionPropCategory || '分类', 'select');
+      // 再尝试 multi_select 类型
+      if (!categoryProp) {
+        categoryProp = findMatchingProperty(dbProps, config.notionPropCategory || '分类', 'multi_select');
+      }
+      // 再尝试 rich_text 类型
+      if (!categoryProp) {
+        categoryProp = findMatchingProperty(dbProps, config.notionPropCategory || '分类', 'rich_text');
+      }
+      // 最后不限类型查找
+      if (!categoryProp) {
+        categoryProp = findMatchingProperty(dbProps, config.notionPropCategory || '分类', null);
+      }
+
+      if (categoryProp && metadata.category && metadata.category.trim()) {
         console.log(`[Discourse Saver] 分类属性: "${categoryProp.name}" (类型: ${categoryProp.type})`);
-        if (metadata.category && metadata.category.trim()) {
-          properties[categoryProp.name] = {
-            select: { name: metadata.category.trim() }
-          };
-          console.log(`[Discourse Saver] 分类值已设置: "${metadata.category.trim()}"`);
-        } else {
-          console.log('[Discourse Saver] 分类为空，跳过设置');
+        const categoryValue = metadata.category.trim();
+
+        // 根据属性类型设置值
+        switch (categoryProp.type) {
+          case 'select':
+            properties[categoryProp.name] = {
+              select: { name: categoryValue }
+            };
+            break;
+          case 'multi_select':
+            properties[categoryProp.name] = {
+              multi_select: [{ name: categoryValue }]
+            };
+            break;
+          case 'rich_text':
+            properties[categoryProp.name] = {
+              rich_text: [{ text: { content: categoryValue } }]
+            };
+            break;
+          default:
+            // 尝试作为 rich_text 处理
+            properties[categoryProp.name] = {
+              rich_text: [{ text: { content: categoryValue } }]
+            };
         }
-      } else {
-        console.log('[Discourse Saver] 未找到分类属性（select类型）');
+        console.log(`[Discourse Saver] 分类值已设置: "${categoryValue}" (类型: ${categoryProp.type})`);
+      } else if (!categoryProp) {
+        console.log('[Discourse Saver] 未找到分类属性');
         // 尝试查找任何包含"分类"的属性
         for (const [propName, propInfo] of Object.entries(dbProps)) {
           if (propName.includes('分类') || propName.toLowerCase().includes('category')) {
             console.log(`[Discourse Saver] 发现可能的分类属性: "${propName}" (类型: ${propInfo.type})`);
           }
         }
+      } else {
+        console.log('[Discourse Saver] 分类为空，跳过设置');
       }
 
       // 标签 - 查找 multi_select 类型的属性
@@ -1880,7 +2070,27 @@ ${tagsYaml}
       // 将 Markdown 转换为 Notion blocks
       const children = markdownToNotionBlocks(markdown);
 
-      // 创建页面
+      // 去重检查：根据 URL 查找已存在的页面
+      let existingPage = null;
+      if (urlProp) {
+        console.log('[Discourse Saver] 检查是否已存在相同 URL 的页面...');
+        existingPage = await findExistingPageByUrl(token, databaseId, metadata.url, urlProp.name);
+      }
+
+      if (existingPage) {
+        // 更新已存在的页面
+        console.log('[Discourse Saver] 找到已存在的页面，正在更新...');
+        try {
+          const result = await updateNotionPage(token, existingPage.id, properties, children);
+          console.log('[Discourse Saver] Notion 页面已更新:', result.id);
+          return { ...result, message: '已更新现有页面' };
+        } catch (e) {
+          console.error('[Discourse Saver] 更新页面失败，尝试创建新页面:', e.message);
+          // 更新失败时继续创建新页面
+        }
+      }
+
+      // 创建新页面
       return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
           method: 'POST',
@@ -1914,11 +2124,99 @@ ${tagsYaml}
       });
     }
 
-    // Markdown 转 Notion Blocks（简化版）
+    // Markdown 转 Notion Blocks（v4.6.0 增强版 - 支持更多内容类型）
     function markdownToNotionBlocks(markdown) {
       const blocks = [];
       const lines = markdown.split('\n');
       let i = 0;
+
+      // 辅助函数：检测URL类型
+      function getUrlType(url) {
+        // 视频链接
+        if (/youtube\.com|youtu\.be|vimeo\.com|bilibili\.com|b23\.tv/i.test(url)) {
+          return 'video';
+        }
+        // 音频链接
+        if (/\.mp3|\.wav|\.ogg|\.m4a|\.aac|soundcloud\.com|spotify\.com|music\./i.test(url)) {
+          return 'audio';
+        }
+        // 图片链接
+        if (/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?|$)/i.test(url)) {
+          return 'image';
+        }
+        // PDF 链接
+        if (/\.pdf(\?|$)/i.test(url)) {
+          return 'pdf';
+        }
+        return 'link';
+      }
+
+      // 辅助函数：解析富文本（支持加粗、斜体、链接、代码）
+      function parseRichText(text) {
+        const richText = [];
+        let remaining = text;
+
+        // 简单处理：如果有复杂格式，按段处理
+        // 检测链接 [text](url)
+        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = linkRegex.exec(text)) !== null) {
+          // 添加链接前的文本
+          if (match.index > lastIndex) {
+            const before = text.substring(lastIndex, match.index);
+            if (before) {
+              richText.push(...parseInlineFormatting(before));
+            }
+          }
+          // 添加链接
+          richText.push({
+            text: { content: match[1], link: { url: match[2] } }
+          });
+          lastIndex = match.index + match[0].length;
+        }
+
+        // 添加剩余文本
+        if (lastIndex < text.length) {
+          richText.push(...parseInlineFormatting(text.substring(lastIndex)));
+        }
+
+        return richText.length > 0 ? richText : [{ text: { content: text.substring(0, 2000) } }];
+      }
+
+      // 辅助函数：解析内联格式（加粗、斜体、代码）
+      function parseInlineFormatting(text) {
+        const parts = [];
+        // 简化处理：检测 **加粗** *斜体* `代码`
+        let remaining = text;
+
+        // 加粗
+        remaining = remaining.replace(/\*\*([^*]+)\*\*/g, (_, content) => {
+          parts.push({ text: { content }, annotations: { bold: true } });
+          return '\x00';
+        });
+
+        // 斜体
+        remaining = remaining.replace(/\*([^*]+)\*/g, (_, content) => {
+          parts.push({ text: { content }, annotations: { italic: true } });
+          return '\x00';
+        });
+
+        // 行内代码
+        remaining = remaining.replace(/`([^`]+)`/g, (_, content) => {
+          parts.push({ text: { content }, annotations: { code: true } });
+          return '\x00';
+        });
+
+        // 处理剩余的普通文本
+        const normalParts = remaining.split('\x00').filter(p => p);
+        normalParts.forEach(p => {
+          parts.push({ text: { content: p } });
+        });
+
+        return parts.length > 0 ? parts : [{ text: { content: text.substring(0, 2000) } }];
+      }
 
       while (i < lines.length) {
         const line = lines[i];
@@ -1935,17 +2233,17 @@ ${tagsYaml}
         if (line.startsWith('# ')) {
           blocks.push({
             type: 'heading_1',
-            heading_1: { rich_text: [{ text: { content: line.substring(2) } }] }
+            heading_1: { rich_text: parseRichText(line.substring(2)) }
           });
         } else if (line.startsWith('## ')) {
           blocks.push({
             type: 'heading_2',
-            heading_2: { rich_text: [{ text: { content: line.substring(3) } }] }
+            heading_2: { rich_text: parseRichText(line.substring(3)) }
           });
         } else if (line.startsWith('### ')) {
           blocks.push({
             type: 'heading_3',
-            heading_3: { rich_text: [{ text: { content: line.substring(4) } }] }
+            heading_3: { rich_text: parseRichText(line.substring(4)) }
           });
         }
         // 代码块
@@ -1965,25 +2263,174 @@ ${tagsYaml}
             }
           });
         }
-        // 分割线
-        else if (line === '---' || line === '***') {
-          blocks.push({ type: 'divider', divider: {} });
-        }
-        // 图片
-        else if (line.match(/^!\[.*\]\(.+\)$/)) {
-          const match = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-          if (match) {
+        // Obsidian callout / 折叠块
+        else if (line.startsWith('> [!')) {
+          const calloutMatch = line.match(/^> \[!([^\]]+)\]([+-])?\s*(.*)$/);
+          if (calloutMatch) {
+            const calloutType = calloutMatch[1];
+            const isCollapsed = calloutMatch[2] === '-';
+            const title = calloutMatch[3] || calloutType;
+
+            // 收集 callout 内容
+            let content = '';
+            i++;
+            while (i < lines.length && lines[i].startsWith('> ')) {
+              content += lines[i].substring(2) + '\n';
+              i++;
+            }
+            i--; // 回退一行
+
+            // 使用 callout 块
             blocks.push({
-              type: 'image',
-              image: { type: 'external', external: { url: match[2] } }
+              type: 'callout',
+              callout: {
+                rich_text: [{ text: { content: title + '\n' + content.trim() } }],
+                icon: { type: 'emoji', emoji: calloutType === 'note' ? '📝' : calloutType === 'warning' ? '⚠️' : '💡' }
+              }
             });
           }
         }
-        // 普通段落
+        // 引用块
+        else if (line.startsWith('> ')) {
+          let quoteContent = line.substring(2);
+          i++;
+          while (i < lines.length && lines[i].startsWith('> ')) {
+            quoteContent += '\n' + lines[i].substring(2);
+            i++;
+          }
+          i--; // 回退一行
+          blocks.push({
+            type: 'quote',
+            quote: { rich_text: parseRichText(quoteContent) }
+          });
+        }
+        // 列表项（无序）
+        else if (line.match(/^[-*]\s+/)) {
+          const content = line.replace(/^[-*]\s+/, '');
+          blocks.push({
+            type: 'bulleted_list_item',
+            bulleted_list_item: { rich_text: parseRichText(content) }
+          });
+        }
+        // 列表项（有序）
+        else if (line.match(/^\d+\.\s+/)) {
+          const content = line.replace(/^\d+\.\s+/, '');
+          blocks.push({
+            type: 'numbered_list_item',
+            numbered_list_item: { rich_text: parseRichText(content) }
+          });
+        }
+        // 任务列表
+        else if (line.match(/^[-*]\s+\[[ x]\]\s+/)) {
+          const isChecked = line.includes('[x]');
+          const content = line.replace(/^[-*]\s+\[[ x]\]\s+/, '');
+          blocks.push({
+            type: 'to_do',
+            to_do: {
+              rich_text: parseRichText(content),
+              checked: isChecked
+            }
+          });
+        }
+        // 分割线
+        else if (line === '---' || line === '***' || line === '___') {
+          blocks.push({ type: 'divider', divider: {} });
+        }
+        // 图片（支持带链接的图片）
+        else if (line.match(/^!\[.*\]\(.+\)$/)) {
+          const match = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+          if (match) {
+            const imageUrl = match[2];
+            // 检查是否是 base64 数据（太大不支持）
+            if (imageUrl.startsWith('data:')) {
+              blocks.push({
+                type: 'paragraph',
+                paragraph: { rich_text: [{ text: { content: '[内嵌图片 - Notion 不支持 Base64]' } }] }
+              });
+            } else {
+              blocks.push({
+                type: 'image',
+                image: { type: 'external', external: { url: imageUrl } }
+              });
+            }
+          }
+        }
+        // 独立链接行（可能是视频/音频/书签）
+        else if (line.match(/^https?:\/\/[^\s]+$/)) {
+          const url = line.trim();
+          const urlType = getUrlType(url);
+
+          switch (urlType) {
+            case 'video':
+              blocks.push({
+                type: 'video',
+                video: { type: 'external', external: { url } }
+              });
+              break;
+            case 'audio':
+              // Notion 不直接支持音频块，使用书签
+              blocks.push({
+                type: 'bookmark',
+                bookmark: { url }
+              });
+              break;
+            case 'image':
+              blocks.push({
+                type: 'image',
+                image: { type: 'external', external: { url } }
+              });
+              break;
+            case 'pdf':
+              blocks.push({
+                type: 'pdf',
+                pdf: { type: 'external', external: { url } }
+              });
+              break;
+            default:
+              // 普通链接，使用书签预览
+              blocks.push({
+                type: 'bookmark',
+                bookmark: { url }
+              });
+          }
+        }
+        // Markdown 链接行 [text](url)
+        else if (line.match(/^\[.+\]\(.+\)$/)) {
+          const match = line.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+          if (match) {
+            const text = match[1];
+            const url = match[2];
+            const urlType = getUrlType(url);
+
+            // 视频链接使用 embed
+            if (urlType === 'video') {
+              blocks.push({
+                type: 'video',
+                video: { type: 'external', external: { url } }
+              });
+            } else if (urlType === 'image') {
+              blocks.push({
+                type: 'image',
+                image: { type: 'external', external: { url } }
+              });
+            } else {
+              // 普通链接
+              blocks.push({
+                type: 'paragraph',
+                paragraph: {
+                  rich_text: [{
+                    text: { content: text, link: { url } }
+                  }]
+                }
+              });
+            }
+          }
+        }
+        // 普通段落（带格式解析）
         else if (line.trim()) {
           blocks.push({
             type: 'paragraph',
-            paragraph: { rich_text: [{ text: { content: line.substring(0, 2000) } }] }
+            paragraph: { rich_text: parseRichText(line) }
           });
         }
 
