@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.8
+// @version      4.5.9
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -507,8 +507,10 @@
       const author = authorElement ? authorElement.textContent.trim() : '未知作者';
       const topicId = window.location.pathname.match(/\/t\/[^/]+\/(\d+)/)?.[1];
 
-      // 提取分类 - 增强版
+      // 提取分类 - v4.5.9 超级增强版
       let category = '';
+
+      // 方法1: DOM 选择器 - 覆盖各种可能的情况
       const categorySelectors = [
         // Discourse 标准选择器
         '.topic-category .badge-category__name',
@@ -533,7 +535,23 @@
         '.breadcrumb .category-name',
         // Linux.do 特殊选择器
         '.category-breadcrumb .badge-category__name',
-        '.category-breadcrumb .badge-category-name'
+        '.category-breadcrumb .badge-category-name',
+        // 更多 Linux.do 可能的选择器
+        '.topic-category span[class*="badge"]',
+        '.topic-category span.d-icon + span',
+        '.topic-category a span:not(.d-icon)',
+        '.extra-info-wrapper .badge-category__name',
+        '.extra-info-wrapper .badge-category-name',
+        '.extra-info .badge-category__name',
+        '.extra-info .badge-category-name',
+        // 带有分类颜色背景的元素
+        'span[style*="background-color"][class*="badge"]',
+        '[class*="category"][class*="badge"] span:last-child',
+        '.topic-category [class*="badge"] span:not([class*="icon"])',
+        // 分类链接内的文本
+        'a[href*="/c/"] .badge-category__name',
+        'a[href*="/c/"] .badge-category-name',
+        'a[href*="/c/"] span.category-name'
       ];
 
       for (const selector of categorySelectors) {
@@ -543,7 +561,7 @@
             const text = categoryBadge.textContent.trim();
             if (text && text.length > 0 && text.length < 100) {
               category = text;
-              console.log(`[Discourse Saver] 找到分类: "${category}" (选择器: ${selector})`);
+              console.log(`[Discourse Saver] 方法1找到分类: "${category}" (选择器: ${selector})`);
               break;
             }
           }
@@ -552,17 +570,164 @@
         }
       }
 
-      // 如果还没找到，尝试从 URL 提取
+      // 方法2: 查找 topic-category 容器内的所有文本
       if (!category) {
-        const categoryMatch = window.location.pathname.match(/\/c\/([^/]+)/);
-        if (categoryMatch) {
-          category = decodeURIComponent(categoryMatch[1]).replace(/-/g, ' ');
-          console.log(`[Discourse Saver] 从URL提取分类: "${category}"`);
+        const topicCategoryEl = document.querySelector('.topic-category') ||
+                                document.querySelector('.extra-info-wrapper .topic-category') ||
+                                document.querySelector('#topic-title .topic-category');
+        if (topicCategoryEl) {
+          // 获取所有非图标的文本节点
+          const walker = document.createTreeWalker(
+            topicCategoryEl,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+          );
+          let node;
+          while (node = walker.nextNode()) {
+            const text = node.textContent.trim();
+            if (text && text.length > 0 && text.length < 50) {
+              category = text;
+              console.log(`[Discourse Saver] 方法2找到分类: "${category}" (从topic-category文本节点)`);
+              break;
+            }
+          }
         }
       }
 
+      // 方法3: 查找所有指向分类的链接
       if (!category) {
-        console.log('[Discourse Saver] 未能提取到分类');
+        const categoryLinks = document.querySelectorAll('a[href*="/c/"]');
+        for (const link of categoryLinks) {
+          // 检查链接是否在标题区域
+          const isInTitleArea = link.closest('#topic-title') ||
+                                link.closest('.topic-category') ||
+                                link.closest('.extra-info') ||
+                                link.closest('.title-wrapper');
+          if (isInTitleArea) {
+            // 尝试从链接的最后一个 span 获取文本
+            const spans = link.querySelectorAll('span');
+            for (const span of spans) {
+              if (!span.classList.contains('d-icon') &&
+                  !span.querySelector('svg') &&
+                  !span.querySelector('use')) {
+                const text = span.textContent.trim();
+                if (text && text.length > 0 && text.length < 50) {
+                  category = text;
+                  console.log(`[Discourse Saver] 方法3找到分类: "${category}" (从分类链接span)`);
+                  break;
+                }
+              }
+            }
+            if (category) break;
+
+            // 尝试从链接本身获取文本
+            const linkText = link.textContent.trim();
+            if (linkText && linkText.length > 0 && linkText.length < 50 && !/^[\s\u200b]*$/.test(linkText)) {
+              category = linkText;
+              console.log(`[Discourse Saver] 方法3找到分类: "${category}" (从分类链接文本)`);
+              break;
+            }
+          }
+        }
+      }
+
+      // 方法4: 从 Discourse 预加载数据提取
+      if (!category) {
+        try {
+          // 尝试从页面的 preloaded data 获取
+          const preloadedData = document.getElementById('data-preloaded');
+          if (preloadedData) {
+            const data = preloadedData.dataset.preloaded;
+            if (data) {
+              const parsed = JSON.parse(data);
+              // 查找 topic 数据
+              for (const key in parsed) {
+                if (key.includes('topic')) {
+                  const topicData = JSON.parse(parsed[key]);
+                  if (topicData && topicData.category_id) {
+                    // 从 categories 数据中查找名称
+                    const categoriesKey = Object.keys(parsed).find(k => k.includes('categories'));
+                    if (categoriesKey) {
+                      const categoriesData = JSON.parse(parsed[categoriesKey]);
+                      const cat = categoriesData?.category_list?.categories?.find(
+                        c => c.id === topicData.category_id
+                      );
+                      if (cat && cat.name) {
+                        category = cat.name;
+                        console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从preloaded data)`);
+                      }
+                    }
+                  }
+                  if (topicData && topicData.fancy_title && !category) {
+                    // 有些论坛把分类放在 details 里
+                    if (topicData.details && topicData.details.category_expert_name) {
+                      category = topicData.details.category_expert_name;
+                      console.log(`[Discourse Saver] 方法4找到分类: "${category}" (从details)`);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.log('[Discourse Saver] 方法4解析preloaded data失败:', e.message);
+        }
+      }
+
+      // 方法5: 从 URL 路径提取（最后的 fallback）
+      if (!category) {
+        // 尝试匹配 /t/topic-slug/123 中的话题 slug
+        const urlParts = window.location.pathname.split('/');
+        const tIndex = urlParts.indexOf('t');
+        if (tIndex > 0 && urlParts[tIndex - 1] && urlParts[tIndex - 1] !== '') {
+          // 前面可能是分类
+          const potentialCategory = decodeURIComponent(urlParts[tIndex - 1]).replace(/-/g, ' ');
+          if (potentialCategory && potentialCategory !== 'c' && potentialCategory.length < 50) {
+            category = potentialCategory;
+            console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从URL路径)`);
+          }
+        }
+
+        // 标准 /c/category/subcategory 路径
+        if (!category) {
+          const categoryMatch = window.location.pathname.match(/\/c\/([^/]+)/);
+          if (categoryMatch) {
+            category = decodeURIComponent(categoryMatch[1]).replace(/-/g, ' ');
+            console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从URL /c/ 路径)`);
+          }
+        }
+      }
+
+      // 方法6: 遍历所有带有特定样式的元素
+      if (!category) {
+        // 查找带有背景色样式的 span（分类通常有颜色）
+        const allSpans = document.querySelectorAll('span[style*="background"], span[style*="color"]');
+        for (const span of allSpans) {
+          const isInTitleArea = span.closest('#topic-title') ||
+                                span.closest('.topic-category') ||
+                                span.closest('.extra-info');
+          if (isInTitleArea) {
+            const text = span.textContent.trim();
+            if (text && text.length > 0 && text.length < 50 && !/^[\s\u200b]*$/.test(text)) {
+              // 排除一些明显不是分类的文本
+              if (!/^\d+$/.test(text) && !text.includes('http') && text !== '×') {
+                category = text;
+                console.log(`[Discourse Saver] 方法6找到分类: "${category}" (从带样式的span)`);
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (category) {
+        console.log(`[Discourse Saver] 最终分类: "${category}"`);
+      } else {
+        console.log('[Discourse Saver] 所有方法都未能提取到分类');
+        // 输出调试信息
+        console.log('[Discourse Saver] 调试 - topic-category 元素:', document.querySelector('.topic-category'));
+        console.log('[Discourse Saver] 调试 - 分类链接:', document.querySelectorAll('a[href*="/c/"]'));
       }
 
       // 提取标签 - 增强版
