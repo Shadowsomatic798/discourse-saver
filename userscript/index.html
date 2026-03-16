@@ -132,7 +132,7 @@
     <div class="header">
       <h1>Discourse Saver</h1>
       <p>通用 Discourse 论坛内容保存工具</p>
-      <div class="version">V4.5.4</div>
+      <div class="version">V4.5.5</div>
     </div>
     
     <div class="content">
@@ -205,7 +205,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.4
+// @version      4.5.5
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&amp;domain=obsidian.md
@@ -341,7 +341,7 @@
     // 清理文件名
     function sanitizeFileName(name) {
       return name
-        .replace(/[&lt;&gt;:"/\\|?*]/g, '')
+        .replace(/[&lt;&gt;:"/\|?*]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .substring(0, 100);
@@ -834,9 +834,17 @@
     // 生成视频嵌入
     function generateVideoEmbed(videoInfo, originalUrl) {
       if (videoInfo.embedUrl) {
-        return '\n\n&lt;iframe src="' + videoInfo.embedUrl + '" style="width:100%; aspect-ratio:16/9;" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;\n\n';
+        return '
+
+&lt;iframe src="' + videoInfo.embedUrl + '" style="width:100%; aspect-ratio:16/9;" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
+
+';
       }
-      return '\n\n' + originalUrl + '\n\n';
+      return '
+
+' + originalUrl + '
+
+';
     }
 
     // 初始化Turndown
@@ -878,14 +886,21 @@
 
           const clonedCode = codeNode.cloneNode(true);
           const brTags = clonedCode.querySelectorAll('br');
-          brTags.forEach(br =&gt; br.replaceWith('\n'));
+          brTags.forEach(br =&gt; br.replaceWith('
+'));
           const code = clonedCode.textContent;
 
           const langFromClass = codeNode.className.match(/lang-(\w+)/);
           const langFromData = node.getAttribute('data-code-wrap');
           const lang = langFromClass ? langFromClass[1] : (langFromData || '');
 
-          return '\n\n```' + lang + '\n' + code + '\n```\n\n';
+          return '
+
+```' + lang + '
+' + code + '
+```
+
+';
         }
       });
 
@@ -904,9 +919,14 @@
           const fullSrc = src.startsWith('http') ? src : window.location.origin + src;
           const alt = (img.getAttribute('data-base62-sha1') ||
                       img.alt?.replace(/[_\d]+$/, '').trim() ||
-                      'image').replace(/[\r\n]+/g, ' ').trim();
+                      'image').replace(/[
+]+/g, ' ').trim();
 
-          return '\n\n![' + alt + '](' + fullSrc + ')\n\n';
+          return '
+
+![' + alt + '](' + fullSrc + ')
+
+';
         }
       });
 
@@ -923,9 +943,14 @@
           if (!src) return '';
 
           const fullSrc = src.startsWith('http') ? src : window.location.origin + src;
-          const alt = (node.alt?.replace(/[_\d]+$/, '').trim() || 'image').replace(/[\r\n]+/g, ' ').trim();
+          const alt = (node.alt?.replace(/[_\d]+$/, '').trim() || 'image').replace(/[
+]+/g, ' ').trim();
 
-          return '\n\n![' + alt + '](' + fullSrc + ')\n\n';
+          return '
+
+![' + alt + '](' + fullSrc + ')
+
+';
         }
       });
 
@@ -975,7 +1000,8 @@
           const href = node.href || '';
           const hrefLower = href.toLowerCase();
 
-          let fileName = content.trim().replace(/[\r\n]+/g, ' ').trim();
+          let fileName = content.trim().replace(/[
+]+/g, ' ').trim();
           const imgMatch = fileName.match(/^!\[([^\]]*)\]\([^)]+\)$/);
           if (imgMatch) {
             fileName = imgMatch[1] || '';
@@ -983,12 +1009,26 @@
           fileName = fileName || href.split('/').pop().split('?')[0] || '文档';
 
           if (/\.svg(\?|$)/i.test(hrefLower)) {
-            return '\n\n![' + fileName + '](' + href + ')\n\n';
+            return '
+
+![' + fileName + '](' + href + ')
+
+';
           }
           if (/\.pdf(\?|$)/i.test(hrefLower)) {
-            return '\n\n📄 **' + fileName + '**\n📥 [下载 PDF](' + href + ')\n\n';
+            return '
+
+📄 **' + fileName + '**
+📥 [下载 PDF](' + href + ')
+
+';
           }
-          return '\n\n📎 **' + fileName + '**\n📥 [下载文件](' + href + ')\n\n';
+          return '
+
+📎 **' + fileName + '**
+📥 [下载文件](' + href + ')
+
+';
         }
       });
 
@@ -1004,7 +1044,7 @@
       // 移除图片尺寸信息行
       markdown = markdown.replace(/^\s*\d+×\d+\s+\d+(?:\.\d+)?\s*(?:KB|MB|GB)\s*$/gim, '');
       // 移除转义下划线
-      markdown = markdown.replace(/\\_/g, '_');
+      markdown = markdown.replace(/\_/g, '_');
       // 清理嵌套图片链接
       markdown = markdown.replace(/\[!\[([^\]]*)\]\([^)]+\)\]\(([^)]+)\)/g, '![$1]($2)');
       markdown = markdown.replace(/!\[!\[([^\]]*)\]\([^)]+\)\]\(([^)]+)\)/g, '![$1]($2)');
@@ -1012,7 +1052,10 @@
       // 移除GIF
       markdown = markdown.replace(/!\[[^\]]*\]\([^)]*\.gif[^)]*\)/gi, '');
       // 移除多余空行
-      markdown = markdown.replace(/\n{3,}/g, '\n\n');
+      markdown = markdown.replace(/
+{3,}/g, '
+
+');
 
       return markdown;
     }
@@ -1042,11 +1085,12 @@
           .map(t =&gt; t.replace(/[,\[\]#]/g, '').trim())
           .filter(t =&gt; t)
           .map(t =&gt; `  - ${t}`)
-          .join('\n');
+          .join('
+');
 
         markdown += `---
 来源: ${metadata.url}
-标题: "${metadata.title.replace(/"/g, '\\"')}"
+标题: "${metadata.title.replace(/"/g, '\"')}"
 作者: ${metadata.author}
 分类: ${metadata.category || '未分类'}
 tags:
@@ -1059,13 +1103,21 @@ ${tagsYaml}
       }
 
       // 添加标题和正文
-      markdown += `# ${metadata.title}\n\n`;
+      markdown += `# ${metadata.title}
+
+`;
       markdown += mainContent;
 
       // 添加评论区
       if (config.saveComments &amp;&amp; comments.length &gt; 0) {
-        markdown += '\n\n---\n\n';
-        markdown += `## 评论区（共${comments.length}条）\n\n`;
+        markdown += '
+
+---
+
+';
+        markdown += `## 评论区（共${comments.length}条）
+
+`;
 
         for (const comment of comments) {
           let commentContent = td.turndown(comment.contentHTML);
@@ -1098,13 +1150,24 @@ ${tagsYaml}
               htmlContent = htmlContent.replace(`__IMG_PLACEHOLDER_${i}__`, img);
             });
 
-            markdown += `&lt;details&gt;\n&lt;summary&gt;&lt;b&gt;${comment.position}楼 - ${usernameDisplayHtml}&lt;/b&gt;&lt;/summary&gt;\n\n`;
+            markdown += `&lt;details&gt;
+&lt;summary&gt;&lt;b&gt;${comment.position}楼 - ${usernameDisplayHtml}&lt;/b&gt;&lt;/summary&gt;
+
+`;
             markdown += htmlContent;
-            markdown += '\n\n&lt;/details&gt;\n\n';
+            markdown += '
+
+&lt;/details&gt;
+
+';
           } else {
-            markdown += `### ${comment.position}楼 - ${usernameDisplay}\n\n`;
+            markdown += `### ${comment.position}楼 - ${usernameDisplay}
+
+`;
             markdown += commentContent;
-            markdown += '\n\n';
+            markdown += '
+
+';
           }
         }
       }
@@ -1189,7 +1252,7 @@ ${tagsYaml}
       };
     }
 
-    // 下载 Markdown 文件（当内容过大无法通过 URI 传输时使用）
+    // 下载 Markdown 文件（备选方案：当剪贴板模式失败时使用）
     function downloadMarkdownFile(markdown, fileName, folderPath) {
       const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -1204,9 +1267,12 @@ ${tagsYaml}
       // 提示用户
       const vaultPath = folderPath || 'Discourse收集箱';
       UtilModule.showNotification(`文件已下载，请手动放入 Obsidian: ${vaultPath}/`, 'info');
-      console.log(`[Discourse Saver] 内容过大，已下载为文件: ${fileName}.md`);
+      console.log(`[Discourse Saver] 备选方案：已下载为文件: ${fileName}.md`);
       console.log(`[Discourse Saver] 请将文件移动到 Obsidian vault 的 "${vaultPath}" 文件夹`);
     }
+
+    // 存储最后一次大文件保存的信息（用于备选下载）
+    let lastLargeFileSave = null;
 
     // 保存到 Obsidian
     async function sendToObsidian(markdown, fileName, config) {
@@ -1216,38 +1282,71 @@ ${tagsYaml}
 
       // 计算 URL 编码后的内容长度
       const encodedLength = encode(markdown).length;
-      // URL 长度限制约 2MB，但浏览器实际限制更低，设置 50KB 阈值
+      // URL 长度限制约 2MB，但浏览器实际限制更低，设置 50KB 阈值使用剪贴板模式
       const URL_LENGTH_THRESHOLD = 50000;
-      const contentTooLarge = encodedLength &gt; URL_LENGTH_THRESHOLD;
+      const useClipboard = encodedLength &gt; URL_LENGTH_THRESHOLD;
 
-      // 如果内容过大（通常是因为嵌入了 Base64 图片），直接下载文件
-      if (contentTooLarge) {
-        console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB &gt; 50KB)，切换到文件下载模式`);
-        downloadMarkdownFile(markdown, fileName, folderPath);
-        return true;
-      }
-
-      // 内容不大，使用 URI 方式
       let obsidianUrl;
       if (config.useAdvancedUri) {
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`filepath=${encode(`${folderPath}/${fileName}.md`)}`);
-        parts.push(`data=${encode(markdown)}`);
-        parts.push(`mode=overwrite`);  // 覆盖已存在的文件
+
+        if (useClipboard) {
+          // 内容过大，使用剪贴板模式
+          GM_setClipboard(markdown, 'text');
+          parts.push(`clipboard=true`);
+          parts.push(`mode=overwrite`);
+          console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，使用剪贴板模式`);
+
+          // 保存信息用于备选下载
+          lastLargeFileSave = { markdown, fileName, folderPath };
+
+          // 显示提示
+          UtilModule.showNotification('内容已复制到剪贴板，正在打开 Obsidian...', 'info');
+        } else {
+          parts.push(`data=${encode(markdown)}`);
+          parts.push(`mode=overwrite`);
+        }
         obsidianUrl = `obsidian://advanced-uri?${parts.join('&amp;')}`;
       } else {
         // 普通 URI 模式
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`file=${encode(`${folderPath}/${fileName}`)}`);
-        parts.push(`content=${encode(markdown)}`);
-        parts.push(`overwrite=true`);
+
+        if (useClipboard) {
+          // 普通模式也尝试使用剪贴板
+          GM_setClipboard(markdown, 'text');
+          parts.push(`content=${encode('&lt;!-- 内容已复制到剪贴板，请按 Ctrl+V / Cmd+V 粘贴 --&gt;')}`);
+          parts.push(`overwrite=true`);
+
+          // 保存信息用于备选下载
+          lastLargeFileSave = { markdown, fileName, folderPath };
+
+          UtilModule.showNotification('内容已复制到剪贴板，Obsidian 打开后请手动粘贴', 'info');
+        } else {
+          parts.push(`content=${encode(markdown)}`);
+          parts.push(`overwrite=true`);
+        }
         obsidianUrl = `obsidian://new?${parts.join('&amp;')}`;
       }
 
       window.open(obsidianUrl, '_self');
       return true;
+    }
+
+    // 备选方案：下载上次大文件（供油猴菜单调用）
+    function downloadLastLargeFile() {
+      if (lastLargeFileSave) {
+        downloadMarkdownFile(
+          lastLargeFileSave.markdown,
+          lastLargeFileSave.fileName,
+          lastLargeFileSave.folderPath
+        );
+      } else {
+        UtilModule.showNotification('没有待下载的大文件', 'warning');
+      }
     }
 
     // 保存为 HTML 文件下载
@@ -1283,11 +1382,15 @@ ${tagsYaml}
         .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '&lt;img src="$2" alt="$1" style="max-width:100%;"&gt;')
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '&lt;a href="$2" target="_blank"&gt;$1&lt;/a&gt;')
         .replace(/^---$/gm, '&lt;hr&gt;')
-        .replace(/\n\n/g, '&lt;/p&gt;&lt;p&gt;')
-        .replace(/\n/g, '&lt;br&gt;');
+        .replace(/
+
+/g, '&lt;/p&gt;&lt;p&gt;')
+        .replace(/
+/g, '&lt;br&gt;');
 
       // 处理代码块
-      htmlBody = htmlBody.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) =&gt; {
+      htmlBody = htmlBody.replace(/```(\w*)
+([\s\S]*?)```/g, (match, lang, code) =&gt; {
         return `&lt;pre&gt;&lt;code class="language-${lang}"&gt;${code.replace(/&lt;/g, '&amp;lt;').replace(/&gt;/g, '&amp;gt;')}&lt;/code&gt;&lt;/pre&gt;`;
       });
 
@@ -1421,7 +1524,8 @@ ${tagsYaml}
     // Markdown 转 Notion Blocks（简化版）
     function markdownToNotionBlocks(markdown) {
       const blocks = [];
-      const lines = markdown.split('\n');
+      const lines = markdown.split('
+');
       let i = 0;
 
       while (i &lt; lines.length) {
@@ -1458,7 +1562,8 @@ ${tagsYaml}
           let code = '';
           i++;
           while (i &lt; lines.length &amp;&amp; !lines[i].startsWith('```')) {
-            code += lines[i] + '\n';
+            code += lines[i] + '
+';
             i++;
           }
           blocks.push({
@@ -1770,7 +1875,8 @@ ${tagsYaml}
       saveToObsidianOnly,      // 仅保存到 Obsidian
       saveToNotionOnly,        // 仅保存到 Notion
       exportHtmlOnly,          // 仅导出 HTML
-      testNotionConnection     // 测试 Notion 连接
+      testNotionConnection,    // 测试 Notion 连接
+      downloadLastLargeFile    // 备选：下载大文件
     };
   })();
 
@@ -2073,7 +2179,7 @@ ${tagsYaml}
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
         &lt;div class="ds-settings-panel"&gt;
-          &lt;h2&gt;📝 Discourse Saver 设置 (V4.5.4)&lt;/h2&gt;
+          &lt;h2&gt;📝 Discourse Saver 设置 (V4.5.5)&lt;/h2&gt;
 
           &lt;div class="ds-section-title"&gt;保存目标&lt;/div&gt;
 
@@ -2303,8 +2409,9 @@ ${tagsYaml}
       GM_registerMenuCommand('📝 仅保存到 Obsidian', () =&gt; SaveModule.saveToObsidianOnly(null));
       GM_registerMenuCommand('📑 仅保存到 Notion', () =&gt; SaveModule.saveToNotionOnly(null));
       GM_registerMenuCommand('📄 仅导出为 HTML', () =&gt; SaveModule.exportHtmlOnly(null));
+      GM_registerMenuCommand('💾 下载大文件（备选）', () =&gt; SaveModule.downloadLastLargeFile());
 
-      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.4)');
+      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.5)');
     }
 
     return { init, showSettingsPanel };
@@ -2323,14 +2430,13 @@ ${tagsYaml}
       </div>
 
       <div class="section">
-        <h2>更新日志 (V4.5.4)</h2>
+        <h2>更新日志 (V4.5.5)</h2>
         <div class="changelog">
           <ul>
-            <li><strong>修复</strong>: 图片嵌入后无法导入 Obsidian 的问题</li>
-            <li><strong>优化</strong>: 内容过大时自动切换为文件下载模式</li>
-            <li><strong>移除</strong>: 不稳定的剪贴板模式</li>
-            <li><strong>提升</strong>: 单张图片限制提升至 15MB</li>
-            <li><strong>提升</strong>: 总图片大小限制提升至 100MB</li>
+            <li><strong>恢复</strong>: 剪贴板模式 (clipboard=true) 作为大文件首选方案</li>
+            <li><strong>新增</strong>: 备选下载菜单（剪贴板失败时可手动下载 .md 文件）</li>
+            <li><strong>优化</strong>: 内容过大时自动复制到剪贴板并打开 Obsidian</li>
+            <li><strong>保持</strong>: 单张图片 15MB、总大小 100MB、最多 50 张限制</li>
           </ul>
         </div>
       </div>
@@ -2342,35 +2448,23 @@ ${tagsYaml}
   </div>
 
   <script>
-    // 脚本内容（用于安装）
     const scriptContent = document.getElementById('scriptContent').value;
 
     function installScript() {
-      // 创建 blob URL
-      const blob = new Blob([scriptContent], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
-      
-      // 尝试触发油猴安装
-      const installUrl = url.replace('blob:', '') + '.user.js';
-      
-      // 方法1: 直接打开 blob URL（某些油猴版本支持）
       const a = document.createElement('a');
       a.href = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(scriptContent);
       a.download = 'discourse-saver.user.js';
-      
-      // 触发下载
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
-      alert('脚本文件已下载！\\n\\n请在 Tampermonkey/Violentmonkey 中：\\n1. 点击扩展图标\\n2. 选择"添加新脚本"或"创建新脚本"\\n3. 粘贴下载的脚本内容\\n4. 保存即可');
+      alert('脚本文件已下载！\n\n请在 Tampermonkey/Violentmonkey 中：\n1. 点击扩展图标\n2. 选择"添加新脚本"或"创建新脚本"\n3. 粘贴下载的脚本内容\n4. 保存即可');
     }
 
     function copyScript() {
       const textarea = document.getElementById('scriptContent');
       textarea.select();
       document.execCommand('copy');
-      alert('脚本代码已复制到剪贴板！\\n\\n请在油猴中新建脚本并粘贴。');
+      alert('脚本代码已复制到剪贴板！\n\n请在油猴中新建脚本并粘贴。');
     }
   </script>
 </body>
