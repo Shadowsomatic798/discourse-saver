@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.6.5
+// @version      4.6.6
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -1969,10 +1969,9 @@ ${tagsYaml}
       });
     }
 
-    // 更新已存在的 Notion 页面
-    async function updateNotionPage(token, pageId, properties, children) {
-      // 先更新属性
-      await new Promise((resolve, reject) => {
+    // 归档（删除）已存在的 Notion 页面
+    async function archiveNotionPage(token, pageId) {
+      return new Promise((resolve) => {
         GM_xmlhttpRequest({
           method: 'PATCH',
           url: `https://api.notion.com/v1/pages/${pageId}`,
@@ -1981,84 +1980,18 @@ ${tagsYaml}
             'Notion-Version': NOTION_API_VERSION,
             'Content-Type': 'application/json'
           },
-          data: JSON.stringify({ properties }),
+          data: JSON.stringify({ archived: true }),
           onload: function(response) {
             if (response.status >= 200 && response.status < 300) {
-              resolve(JSON.parse(response.responseText));
+              console.log('[Discourse Saver] 已归档旧页面:', pageId);
+              resolve(true);
             } else {
-              reject(new Error('更新页面属性失败'));
+              console.warn('[Discourse Saver] 归档页面失败:', response.responseText);
+              resolve(false);
             }
           },
           onerror: function() {
-            reject(new Error('网络请求失败'));
-          }
-        });
-      });
-
-      // 删除旧的内容块
-      const existingBlocks = await new Promise((resolve) => {
-        GM_xmlhttpRequest({
-          method: 'GET',
-          url: `https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Notion-Version': NOTION_API_VERSION
-          },
-          onload: function(response) {
-            if (response.status >= 200 && response.status < 300) {
-              const data = JSON.parse(response.responseText);
-              resolve(data.results || []);
-            } else {
-              resolve([]);
-            }
-          },
-          onerror: function() {
-            resolve([]);
-          }
-        });
-      });
-
-      // 并行删除旧块（最多同时删除10个，避免API限制）
-      const deleteBlock = (blockId) => new Promise((resolve) => {
-        GM_xmlhttpRequest({
-          method: 'DELETE',
-          url: `https://api.notion.com/v1/blocks/${blockId}`,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Notion-Version': NOTION_API_VERSION
-          },
-          onload: function() { resolve(); },
-          onerror: function() { resolve(); }
-        });
-      });
-
-      // 分批并行删除，每批10个
-      const batchSize = 10;
-      for (let i = 0; i < existingBlocks.length; i += batchSize) {
-        const batch = existingBlocks.slice(i, i + batchSize);
-        await Promise.all(batch.map(block => deleteBlock(block.id)));
-      }
-
-      // 添加新的内容块
-      return new Promise((resolve, reject) => {
-        GM_xmlhttpRequest({
-          method: 'PATCH',
-          url: `https://api.notion.com/v1/blocks/${pageId}/children`,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Notion-Version': NOTION_API_VERSION,
-            'Content-Type': 'application/json'
-          },
-          data: JSON.stringify({ children: children.slice(0, 100) }),
-          onload: function(response) {
-            if (response.status >= 200 && response.status < 300) {
-              resolve({ id: pageId, updated: true });
-            } else {
-              reject(new Error('更新页面内容失败'));
-            }
-          },
-          onerror: function() {
-            reject(new Error('网络请求失败'));
+            resolve(false);
           }
         });
       });
@@ -2227,16 +2160,9 @@ ${tagsYaml}
       }
 
       if (existingPage) {
-        // 更新已存在的页面
-        console.log('[Discourse Saver] 找到已存在的页面，正在更新...');
-        try {
-          const result = await updateNotionPage(token, existingPage.id, properties, children);
-          console.log('[Discourse Saver] Notion 页面已更新:', result.id);
-          return { ...result, message: '已更新现有页面' };
-        } catch (e) {
-          console.error('[Discourse Saver] 更新页面失败，尝试创建新页面:', e.message);
-          // 更新失败时继续创建新页面
-        }
+        // 归档已存在的页面，然后创建新页面
+        console.log('[Discourse Saver] 找到已存在的页面，正在归档后重新创建...');
+        await archiveNotionPage(token, existingPage.id);
       }
 
       // 创建新页面
@@ -3213,7 +3139,7 @@ ${tagsYaml}
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
         <div class="ds-settings-panel">
-          <h2>📝 Discourse Saver 设置 (V4.6.5)</h2>
+          <h2>📝 Discourse Saver 设置 (V4.6.6)</h2>
 
           <div class="ds-section-title">自定义站点</div>
 
