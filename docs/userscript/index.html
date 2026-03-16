@@ -99,36 +99,32 @@
     .step::before {
       counter-increment: step;
       content: counter(step);
-      width: 30px;
-      height: 30px;
-      background: #4f46e5;
-      color: white;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      background: #4f46e5;
+      color: white;
+      border-radius: 50%;
+      font-weight: 600;
       margin-right: 15px;
       flex-shrink: 0;
     }
-    .step-content { flex: 1; }
-    .step-title { font-weight: 600; margin-bottom: 5px; }
-    .step-desc { font-size: 14px; color: #6b7280; }
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #10b981;
-      color: white;
-      padding: 15px 30px;
-      border-radius: 8px;
-      font-weight: 600;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: transform 0.3s ease;
-      z-index: 1000;
+    .step-content h3 { font-size: 15px; color: #1f2937; margin-bottom: 5px; }
+    .step-content p { font-size: 14px; color: #6b7280; }
+    .changelog { font-size: 14px; color: #4b5563; }
+    .changelog ul { margin-left: 20px; margin-top: 10px; }
+    .changelog li { margin-bottom: 8px; }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background: #f9fafb;
+      color: #6b7280;
+      font-size: 14px;
     }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+    .footer a { color: #4f46e5; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -136,7 +132,7 @@
     <div class="header">
       <h1>Discourse Saver</h1>
       <p>通用 Discourse 论坛内容保存工具</p>
-      <span class="version">v4.5.3 油猴版</span>
+      <div class="version">V4.5.4</div>
     </div>
     
     <div class="content">
@@ -144,104 +140,75 @@
         <h2>功能特性</h2>
         <div class="features">
           <div class="feature">
-            <div class="feature-icon">📥</div>
+            <div class="feature-icon">📝</div>
             <div class="feature-title">多目标保存</div>
-            <div class="feature-desc">支持 Obsidian、Notion、HTML 多种保存方式</div>
-          </div>
-          <div class="feature">
-            <div class="feature-icon">⚡</div>
-            <div class="feature-title">并行处理</div>
-            <div class="feature-desc">多目标同时保存，异步高效执行</div>
-          </div>
-          <div class="feature">
-            <div class="feature-icon">🔀</div>
-            <div class="feature-title">独立导出</div>
-            <div class="feature-desc">每个平台可独立导出，灵活选择</div>
-          </div>
-          <div class="feature">
-            <div class="feature-icon">📑</div>
-            <div class="feature-title">Notion 集成</div>
-            <div class="feature-desc">直接通过 API 保存到 Notion 数据库</div>
+            <div class="feature-desc">支持 Obsidian、Notion、HTML 三种保存方式</div>
           </div>
           <div class="feature">
             <div class="feature-icon">💬</div>
             <div class="feature-title">评论支持</div>
-            <div class="feature-desc">支持保存评论，可折叠显示</div>
+            <div class="feature-desc">可保存评论，支持楼层范围和折叠模式</div>
           </div>
           <div class="feature">
-            <div class="feature-icon">⚙️</div>
-            <div class="feature-title">灵活配置</div>
-            <div class="feature-desc">支持自定义保管库和路径</div>
+            <div class="feature-icon">🔗</div>
+            <div class="feature-title">快捷操作</div>
+            <div class="feature-desc">单击链接按钮保存，双击复制链接</div>
           </div>
           <div class="feature">
             <div class="feature-icon">🖼️</div>
             <div class="feature-title">图片嵌入</div>
-            <div class="feature-desc">支持将图片转为 Base64，解决手机端图片无法显示问题</div>
+            <div class="feature-desc">支持 Base64 嵌入图片，解决手机端显示问题</div>
           </div>
         </div>
       </div>
-      
+
       <div class="section">
         <h2>安装步骤</h2>
         <div class="steps">
           <div class="step">
             <div class="step-content">
-              <div class="step-title">安装油猴扩展</div>
-              <div class="step-desc">在浏览器中安装 Tampermonkey 或 Violentmonkey 扩展</div>
+              <h3>安装油猴扩展</h3>
+              <p>首先确保浏览器已安装 Tampermonkey 或 Violentmonkey 扩展</p>
             </div>
           </div>
           <div class="step">
             <div class="step-content">
-              <div class="step-title">复制脚本代码</div>
-              <div class="step-desc">点击下方按钮复制脚本代码</div>
+              <h3>点击安装按钮</h3>
+              <p>点击下方的"一键安装脚本"按钮，油猴会自动弹出安装界面</p>
             </div>
           </div>
           <div class="step">
             <div class="step-content">
-              <div class="step-title">新建用户脚本</div>
-              <div class="step-desc">打开油猴扩展 → 添加新脚本 → 粘贴代码 → 保存</div>
+              <h3>确认安装</h3>
+              <p>在油猴安装界面中点击"安装"或"确认"按钮完成安装</p>
             </div>
           </div>
           <div class="step">
             <div class="step-content">
-              <div class="step-title">开始使用</div>
-              <div class="step-desc">访问 Discourse 论坛，点击帖子的链接按钮即可保存</div>
+              <h3>配置设置</h3>
+              <p>访问任意 Discourse 论坛，点击油猴图标选择"设置"进行配置</p>
             </div>
           </div>
         </div>
       </div>
-      
-      <div class="section">
-        <h2>脚本代码</h2>
-        <div style="margin-bottom: 15px;">
-          <button class="btn btn-primary" onclick="copyScript()">📋 一键复制脚本</button>
-        </div>
-        <textarea id="scriptArea" class="script-area" readonly></textarea>
+
+      <div class="section" style="text-align: center;">
+        <button class="btn btn-primary" onclick="installScript()">一键安装脚本</button>
+        <p style="margin-top: 15px; color: #6b7280; font-size: 14px;">
+          如果按钮无效，请手动复制下方代码到油猴新建脚本
+        </p>
       </div>
-      
+
       <div class="section">
-        <h2>使用说明</h2>
-        <ul style="padding-left: 20px; color: #4b5563; line-height: 2;">
-          <li><strong>单击</strong> 帖子的链接按钮 → 保存到配置的目标</li>
-          <li><strong>双击</strong> 链接按钮 → 复制链接（原始功能）</li>
-          <li><strong>油猴菜单</strong> → 可选择保存到全部目标或单独平台</li>
-          <li><strong>设置面板</strong> → 配置 Obsidian/Notion/HTML 保存选项</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  
-  <div id="toast" class="toast">已复制到剪贴板!</div>
-  
-  <!-- 使用 script 标签存储脚本内容，避免转义问题 -->
-  <script type="text/plain" id="scriptSource">
+        <h2>脚本源码</h2>
+        <textarea class="script-area" id="scriptContent" readonly>
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.3
+// @version      4.5.4
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
+// @icon         https://www.google.com/s2/favicons?sz=64&amp;domain=obsidian.md
 // @match        https://linux.do/*
 // @match        https://meta.discourse.org/*
 // @match        https://users.rust-lang.org/*
@@ -374,7 +341,7 @@
     // 清理文件名
     function sanitizeFileName(name) {
       return name
-        .replace(/[<>:"/\\|?*]/g, '')
+        .replace(/[&lt;&gt;:"/\\|?*]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .substring(0, 100);
@@ -411,40 +378,40 @@
       div.textContent = message;
       document.body.appendChild(div);
 
-      setTimeout(() => div.remove(), 3000);
+      setTimeout(() =&gt; div.remove(), 3000);
     }
 
     // 图片嵌入限制常量
     const IMAGE_LIMITS = {
-      MAX_SINGLE_SIZE: 5 * 1024 * 1024,     // 单张图片最大 5MB
-      MAX_TOTAL_SIZE: 50 * 1024 * 1024,     // 总大小最大 50MB
+      MAX_SINGLE_SIZE: 15 * 1024 * 1024,    // 单张图片最大 15MB
+      MAX_TOTAL_SIZE: 100 * 1024 * 1024,    // 总大小最大 100MB
       MAX_IMAGE_COUNT: 50                    // 最多嵌入 50 张图片
     };
 
     // 下载图片并转换为 Base64（带大小检测）
     function fetchImageAsBase64(url, maxSize = IMAGE_LIMITS.MAX_SINGLE_SIZE) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) =&gt; {
         GM_xmlhttpRequest({
           method: 'GET',
           url: url,
           responseType: 'blob',
           timeout: 30000,
           onload: function(response) {
-            if (response.status >= 200 && response.status < 300) {
+            if (response.status &gt;= 200 &amp;&amp; response.status &lt; 300) {
               const blob = response.response;
 
               // 检查图片大小
-              if (blob.size > maxSize) {
-                reject(new Error(`图片过大 (${(blob.size/1024/1024).toFixed(1)}MB > ${(maxSize/1024/1024).toFixed(0)}MB限制)`));
+              if (blob.size &gt; maxSize) {
+                reject(new Error(`图片过大 (${(blob.size/1024/1024).toFixed(1)}MB &gt; ${(maxSize/1024/1024).toFixed(0)}MB限制)`));
                 return;
               }
 
               const reader = new FileReader();
-              reader.onloadend = () => resolve({
+              reader.onloadend = () =&gt; resolve({
                 data: reader.result,
                 size: blob.size
               });
-              reader.onerror = () => reject(new Error('Failed to read blob'));
+              reader.onerror = () =&gt; reject(new Error('Failed to read blob'));
               reader.readAsDataURL(blob);
             } else {
               reject(new Error(`HTTP ${response.status}`));
@@ -490,7 +457,7 @@
       for (const match of matches) {
         const url = match[2];
         // 跳过已经是 base64 的图片和无效 URL
-        if (url && !url.startsWith('data:') && url.startsWith('http') && !seenUrls.has(url)) {
+        if (url &amp;&amp; !url.startsWith('data:') &amp;&amp; url.startsWith('http') &amp;&amp; !seenUrls.has(url)) {
           seenUrls.add(url);
           urlList.push(url);
         }
@@ -503,7 +470,7 @@
 
       // 应用图片数量限制
       const effectiveUrls = urlList.slice(0, IMAGE_LIMITS.MAX_IMAGE_COUNT);
-      if (urlList.length > IMAGE_LIMITS.MAX_IMAGE_COUNT) {
+      if (urlList.length &gt; IMAGE_LIMITS.MAX_IMAGE_COUNT) {
         console.warn(`[Discourse Saver] 图片数量 (${urlList.length}) 超过限制 (${IMAGE_LIMITS.MAX_IMAGE_COUNT})，只嵌入前 ${IMAGE_LIMITS.MAX_IMAGE_COUNT} 张`);
         showNotification(`图片过多，只嵌入前 ${IMAGE_LIMITS.MAX_IMAGE_COUNT} 张`, 'warning');
       }
@@ -520,10 +487,10 @@
 
       try {
         await Promise.race([
-          Promise.all(effectiveUrls.map(async (url) => {
+          Promise.all(effectiveUrls.map(async (url) =&gt; {
             try {
               // 检查是否已超过总大小限制
-              if (totalSize >= IMAGE_LIMITS.MAX_TOTAL_SIZE) {
+              if (totalSize &gt;= IMAGE_LIMITS.MAX_TOTAL_SIZE) {
                 console.warn(`[Discourse Saver] 总大小已达限制，跳过: ${url.substring(0, 50)}...`);
                 urlMap.set(url, null);
                 skippedCount++;
@@ -536,7 +503,7 @@
               const imageSize = result.size;
 
               // 检查添加此图片后是否超过总大小限制
-              if (totalSize + imageSize > IMAGE_LIMITS.MAX_TOTAL_SIZE) {
+              if (totalSize + imageSize &gt; IMAGE_LIMITS.MAX_TOTAL_SIZE) {
                 console.warn(`[Discourse Saver] 添加此图片将超过总大小限制，跳过 (${(imageSize/1024/1024).toFixed(1)}MB)`);
                 urlMap.set(url, null);
                 skippedCount++;
@@ -556,8 +523,8 @@
               if (onProgress) onProgress(completed, total);
             }
           })),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('图片嵌入总超时')), OVERALL_TIMEOUT)
+          new Promise((_, reject) =&gt;
+            setTimeout(() =&gt; reject(new Error('图片嵌入总超时')), OVERALL_TIMEOUT)
           )
         ]);
       } catch (timeoutError) {
@@ -568,7 +535,7 @@
       let result = markdown;
       try {
         for (const [url, base64] of urlMap.entries()) {
-          if (base64 && typeof base64 === 'string') {
+          if (base64 &amp;&amp; typeof base64 === 'string') {
             result = result.split(`](${url})`).join(`](${base64})`);
           }
         }
@@ -577,10 +544,10 @@
         return markdown;
       }
 
-      const successCount = [...urlMap.values()].filter(v => v !== null).length;
+      const successCount = [...urlMap.values()].filter(v =&gt; v !== null).length;
       console.log(`[Discourse Saver] 图片嵌入完成: ${successCount}/${total} 成功, ${skippedCount} 跳过, 总大小: ${(totalSize/1024/1024).toFixed(1)}MB`);
 
-      if (skippedCount > 0) {
+      if (skippedCount &gt; 0) {
         showNotification(`已嵌入 ${successCount} 张图片，${skippedCount} 张因过大或超限跳过`, 'info');
       }
 
@@ -625,9 +592,9 @@
       // 提取标签
       const tags = [];
       const tagElements = document.querySelectorAll('.discourse-tags .discourse-tag, .list-tags .discourse-tag');
-      tagElements.forEach(tag => {
+      tagElements.forEach(tag =&gt; {
         const tagText = tag.textContent.trim();
-        if (tagText && !tags.includes(tagText)) {
+        if (tagText &amp;&amp; !tags.includes(tagText)) {
           tags.push(tagText);
         }
       });
@@ -661,7 +628,7 @@
                            el.querySelector('a[data-user-card]');
         if (userLinkEl) {
           userUrl = userLinkEl.href;
-        } else if (username && username !== '匿名用户') {
+        } else if (username &amp;&amp; username !== '匿名用户') {
           userUrl = `${baseUrl}/u/${username}`;
         }
 
@@ -726,9 +693,9 @@
 
         // 分批获取
         const batchSize = 20;
-        for (let i = 0; i < idsToFetch.length; i += batchSize) {
+        for (let i = 0; i &lt; idsToFetch.length; i += batchSize) {
           const batch = idsToFetch.slice(i, i + batchSize);
-          const params = batch.map(id => `post_ids[]=${id}`).join('&');
+          const params = batch.map(id =&gt; `post_ids[]=${id}`).join('&amp;');
           const postsUrl = `${baseUrl}/t/${topicId}/posts.json?${params}`;
 
           if (progressCallback) {
@@ -758,12 +725,12 @@
             });
           }
 
-          if (i + batchSize < idsToFetch.length) {
-            await new Promise(r => setTimeout(r, 100));
+          if (i + batchSize &lt; idsToFetch.length) {
+            await new Promise(r =&gt; setTimeout(r, 100));
           }
         }
 
-        comments.sort((a, b) => parseInt(a.position) - parseInt(b.position));
+        comments.sort((a, b) =&gt; parseInt(a.position) - parseInt(b.position));
         return comments;
 
       } catch (error) {
@@ -794,7 +761,7 @@
                              el.querySelector('a[data-user-card]');
           if (userLinkEl) {
             userUrl = userLinkEl.href;
-          } else if (username && username !== '匿名用户') {
+          } else if (username &amp;&amp; username !== '匿名用户') {
             userUrl = `${baseUrl}/u/${username}`;
           }
 
@@ -867,7 +834,7 @@
     // 生成视频嵌入
     function generateVideoEmbed(videoInfo, originalUrl) {
       if (videoInfo.embedUrl) {
-        return '\n\n<iframe src="' + videoInfo.embedUrl + '" style="width:100%; aspect-ratio:16/9;" frameborder="0" allowfullscreen></iframe>\n\n';
+        return '\n\n&lt;iframe src="' + videoInfo.embedUrl + '" style="width:100%; aspect-ratio:16/9;" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;\n\n';
       }
       return '\n\n' + originalUrl + '\n\n';
     }
@@ -884,17 +851,17 @@
 
       // 保留颜色样式
       turndownService.addRule('coloredText', {
-        filter: (node) => {
+        filter: (node) =&gt; {
           if (node.nodeName !== 'SPAN') return false;
           const style = node.getAttribute('style') || '';
           return style.includes('color');
         },
-        replacement: (content, node) => {
+        replacement: (content, node) =&gt; {
           const style = node.getAttribute('style') || '';
           const colorMatch = style.match(/color:\s*([^;]+)/i);
-          if (colorMatch && content.trim()) {
+          if (colorMatch &amp;&amp; content.trim()) {
             const color = colorMatch[1].trim();
-            return `<span style="color:${color}">${content}</span>`;
+            return `&lt;span style="color:${color}"&gt;${content}&lt;/span&gt;`;
           }
           return content;
         }
@@ -902,16 +869,16 @@
 
       // 处理代码块
       turndownService.addRule('codeBlocks', {
-        filter: (node) => {
-          return node.nodeName === 'PRE' && node.querySelector('code');
+        filter: (node) =&gt; {
+          return node.nodeName === 'PRE' &amp;&amp; node.querySelector('code');
         },
-        replacement: (content, node) => {
+        replacement: (content, node) =&gt; {
           const codeNode = node.querySelector('code');
           if (!codeNode) return content;
 
           const clonedCode = codeNode.cloneNode(true);
           const brTags = clonedCode.querySelectorAll('br');
-          brTags.forEach(br => br.replaceWith('\n'));
+          brTags.forEach(br =&gt; br.replaceWith('\n'));
           const code = clonedCode.textContent;
 
           const langFromClass = codeNode.className.match(/lang-(\w+)/);
@@ -924,12 +891,12 @@
 
       // 处理lightbox图片
       turndownService.addRule('lightboxImages', {
-        filter: (node) => {
-          return node.nodeName === 'A' &&
-                 node.classList.contains('lightbox') &&
+        filter: (node) =&gt; {
+          return node.nodeName === 'A' &amp;&amp;
+                 node.classList.contains('lightbox') &amp;&amp;
                  node.querySelector('img');
         },
-        replacement: (content, node) => {
+        replacement: (content, node) =&gt; {
           const img = node.querySelector('img');
           if (!img) return '';
 
@@ -945,13 +912,13 @@
 
       // 处理普通图片
       turndownService.addRule('images', {
-        filter: (node) => {
+        filter: (node) =&gt; {
           if (node.nodeName !== 'IMG') return false;
           if (node.classList.contains('emoji')) return false;
           if (node.parentNode?.classList?.contains('lightbox')) return false;
           return true;
         },
-        replacement: (content, node) => {
+        replacement: (content, node) =&gt; {
           const src = node.src;
           if (!src) return '';
 
@@ -964,7 +931,7 @@
 
       // 移除emoji
       turndownService.addRule('emojiImages', {
-        filter: (node) => {
+        filter: (node) =&gt; {
           if (node.nodeName !== 'IMG') return false;
           const className = node.className || '';
           const src = node.src || '';
@@ -975,18 +942,18 @@
               /^:[^:]+:$/.test(alt)) return true;
           return false;
         },
-        replacement: () => ''
+        replacement: () =&gt; ''
       });
 
       // 视频链接转iframe
       turndownService.addRule('onlineVideoEmbed', {
-        filter: (node) => {
+        filter: (node) =&gt; {
           if (node.nodeName !== 'A') return false;
           const href = node.href || '';
           const videoInfo = parseVideoUrl(href);
           return videoInfo.isVideo;
         },
-        replacement: (content, node) => {
+        replacement: (content, node) =&gt; {
           const href = node.href || '';
           const videoInfo = parseVideoUrl(href);
           if (videoInfo.isVideo) {
@@ -998,13 +965,13 @@
 
       // 文档链接
       turndownService.addRule('documentEmbed', {
-        filter: (node) => {
+        filter: (node) =&gt; {
           if (node.nodeName !== 'A') return false;
           if (node.classList?.contains('lightbox')) return false;
           const href = (node.href || '').toLowerCase();
           return /\.(pdf|docx?|xlsx?|pptx?|svg|csv|txt)(\?|$)/i.test(href);
         },
-        replacement: (content, node) => {
+        replacement: (content, node) =&gt; {
           const href = node.href || '';
           const hrefLower = href.toLowerCase();
 
@@ -1062,19 +1029,19 @@
       if (config.addMetadata) {
         const timeStr = UtilModule.getBeijingTime();
         const allTags = ['discourse'];
-        if (metadata.tags && metadata.tags.length > 0) {
-          metadata.tags.forEach(tag => {
+        if (metadata.tags &amp;&amp; metadata.tags.length &gt; 0) {
+          metadata.tags.forEach(tag =&gt; {
             const cleanTag = String(tag).trim();
-            if (cleanTag && !allTags.includes(cleanTag)) {
+            if (cleanTag &amp;&amp; !allTags.includes(cleanTag)) {
               allTags.push(cleanTag);
             }
           });
         }
         // 生成 YAML 列表格式的 tags
         const tagsYaml = allTags
-          .map(t => t.replace(/[,\[\]#]/g, '').trim())
-          .filter(t => t)
-          .map(t => `  - ${t}`)
+          .map(t =&gt; t.replace(/[,\[\]#]/g, '').trim())
+          .filter(t =&gt; t)
+          .map(t =&gt; `  - ${t}`)
           .join('\n');
 
         markdown += `---
@@ -1096,7 +1063,7 @@ ${tagsYaml}
       markdown += mainContent;
 
       // 添加评论区
-      if (config.saveComments && comments.length > 0) {
+      if (config.saveComments &amp;&amp; comments.length &gt; 0) {
         markdown += '\n\n---\n\n';
         markdown += `## 评论区（共${comments.length}条）\n\n`;
 
@@ -1110,30 +1077,30 @@ ${tagsYaml}
             ? `[${comment.username}](${comment.userUrl})`
             : comment.username;
           const usernameDisplayHtml = comment.userUrl
-            ? `<a href="${comment.userUrl}"><b>${comment.username}</b></a>`
-            : `<b>${comment.username}</b>`;
+            ? `&lt;a href="${comment.userUrl}"&gt;&lt;b&gt;${comment.username}&lt;/b&gt;&lt;/a&gt;`
+            : `&lt;b&gt;${comment.username}&lt;/b&gt;`;
 
           if (config.foldComments) {
             // 折叠模式：转换Markdown为HTML
             let htmlContent = commentContent.trim();
-            htmlContent = htmlContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            htmlContent = htmlContent.replace(/~~(.+?)~~/g, '<del>$1</del>');
-            htmlContent = htmlContent.replace(/`([^`]+)`/g, '<code>$1</code>');
+            htmlContent = htmlContent.replace(/\*\*(.+?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;');
+            htmlContent = htmlContent.replace(/~~(.+?)~~/g, '&lt;del&gt;$1&lt;/del&gt;');
+            htmlContent = htmlContent.replace(/`([^`]+)`/g, '&lt;code&gt;$1&lt;/code&gt;');
 
             // 保护图片，转换链接
             const imgPlaceholders = [];
-            htmlContent = htmlContent.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match) => {
+            htmlContent = htmlContent.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match) =&gt; {
               imgPlaceholders.push(match);
               return `__IMG_PLACEHOLDER_${imgPlaceholders.length - 1}__`;
             });
-            htmlContent = htmlContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-            imgPlaceholders.forEach((img, i) => {
+            htmlContent = htmlContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '&lt;a href="$2"&gt;$1&lt;/a&gt;');
+            imgPlaceholders.forEach((img, i) =&gt; {
               htmlContent = htmlContent.replace(`__IMG_PLACEHOLDER_${i}__`, img);
             });
 
-            markdown += `<details>\n<summary><b>${comment.position}楼 - ${usernameDisplayHtml}</b></summary>\n\n`;
+            markdown += `&lt;details&gt;\n&lt;summary&gt;&lt;b&gt;${comment.position}楼 - ${usernameDisplayHtml}&lt;/b&gt;&lt;/summary&gt;\n\n`;
             markdown += htmlContent;
-            markdown += '\n\n</details>\n\n';
+            markdown += '\n\n&lt;/details&gt;\n\n';
           } else {
             markdown += `### ${comment.position}楼 - ${usernameDisplay}\n\n`;
             markdown += commentContent;
@@ -1167,7 +1134,7 @@ ${tagsYaml}
 
       const { title, contentHTML, url, author, topicId, category, tags } = extracted;
       let comments = [];
-      let isSingleCommentMode = targetPostNumber && targetPostNumber !== '1';
+      let isSingleCommentMode = targetPostNumber &amp;&amp; targetPostNumber !== '1';
 
       if (isSingleCommentMode) {
         UtilModule.showNotification(`正在提取第${targetPostNumber}楼评论...`, 'info');
@@ -1185,16 +1152,16 @@ ${tagsYaml}
           effectiveCommentCount = config.floorTo || 100;
         }
 
-        const useAPI = effectiveSaveAll || effectiveCommentCount > 30;
+        const useAPI = effectiveSaveAll || effectiveCommentCount &gt; 30;
 
-        if (useAPI && topicId) {
+        if (useAPI &amp;&amp; topicId) {
           UtilModule.showNotification('正在通过API加载评论...', 'info');
           try {
             comments = await ExtractModule.extractCommentsViaAPI(
               topicId,
               effectiveCommentCount,
               effectiveSaveAll,
-              (msg) => UtilModule.showNotification(msg, 'info')
+              (msg) =&gt; UtilModule.showNotification(msg, 'info')
             );
           } catch (apiError) {
             console.warn('[Discourse Saver] API获取失败，回退到DOM方式:', apiError);
@@ -1207,12 +1174,12 @@ ${tagsYaml}
       }
 
       // 楼层范围过滤
-      if (config.useFloorRange && comments.length > 0) {
+      if (config.useFloorRange &amp;&amp; comments.length &gt; 0) {
         const floorFrom = config.floorFrom || 1;
         const floorTo = config.floorTo || 100;
-        comments = comments.filter(c => {
+        comments = comments.filter(c =&gt; {
           const pos = parseInt(c.position);
-          return pos >= floorFrom && pos <= floorTo;
+          return pos &gt;= floorFrom &amp;&amp; pos &lt;= floorTo;
         });
       }
 
@@ -1222,51 +1189,61 @@ ${tagsYaml}
       };
     }
 
+    // 下载 Markdown 文件（当内容过大无法通过 URI 传输时使用）
+    function downloadMarkdownFile(markdown, fileName, folderPath) {
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // 提示用户
+      const vaultPath = folderPath || 'Discourse收集箱';
+      UtilModule.showNotification(`文件已下载，请手动放入 Obsidian: ${vaultPath}/`, 'info');
+      console.log(`[Discourse Saver] 内容过大，已下载为文件: ${fileName}.md`);
+      console.log(`[Discourse Saver] 请将文件移动到 Obsidian vault 的 "${vaultPath}" 文件夹`);
+    }
+
     // 保存到 Obsidian
     async function sendToObsidian(markdown, fileName, config) {
       const vaultName = config.vaultName;
       const folderPath = config.folderPath || 'Discourse收集箱';
-      const encode = (str) => encodeURIComponent(str);
+      const encode = (str) =&gt; encodeURIComponent(str);
 
       // 计算 URL 编码后的内容长度
       const encodedLength = encode(markdown).length;
-      // URL 长度限制约 2MB，但为安全起见设置 50KB 阈值使用剪贴板模式
+      // URL 长度限制约 2MB，但浏览器实际限制更低，设置 50KB 阈值
       const URL_LENGTH_THRESHOLD = 50000;
-      const useClipboard = encodedLength > URL_LENGTH_THRESHOLD;
+      const contentTooLarge = encodedLength &gt; URL_LENGTH_THRESHOLD;
 
+      // 如果内容过大（通常是因为嵌入了 Base64 图片），直接下载文件
+      if (contentTooLarge) {
+        console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB &gt; 50KB)，切换到文件下载模式`);
+        downloadMarkdownFile(markdown, fileName, folderPath);
+        return true;
+      }
+
+      // 内容不大，使用 URI 方式
       let obsidianUrl;
       if (config.useAdvancedUri) {
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`filepath=${encode(`${folderPath}/${fileName}.md`)}`);
-
-        if (useClipboard) {
-          // 内容过大，使用剪贴板模式（解决 Base64 图片导致 URL 超长问题）
-          GM_setClipboard(markdown, 'text');
-          parts.push(`clipboard=true`);
-          console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，使用剪贴板模式`);
-        } else {
-          parts.push(`data=${encode(markdown)}`);
-        }
+        parts.push(`data=${encode(markdown)}`);
         parts.push(`mode=overwrite`);  // 覆盖已存在的文件
-        obsidianUrl = `obsidian://advanced-uri?${parts.join('&')}`;
+        obsidianUrl = `obsidian://advanced-uri?${parts.join('&amp;')}`;
       } else {
         // 普通 URI 模式
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`file=${encode(`${folderPath}/${fileName}`)}`);
-
-        if (useClipboard) {
-          // 普通模式不支持剪贴板，提示用户手动粘贴
-          GM_setClipboard(markdown, 'text');
-          // 创建空文件，用户需手动粘贴
-          parts.push(`content=${encode('<!-- 内容已复制到剪贴板，请按 Ctrl+V / Cmd+V 粘贴 -->')}`);
-          alert('内容过大，已复制到剪贴板。\n\n请在 Obsidian 打开文件后按 Ctrl+V (Mac: Cmd+V) 粘贴。');
-        } else {
-          parts.push(`content=${encode(markdown)}`);
-        }
+        parts.push(`content=${encode(markdown)}`);
         parts.push(`overwrite=true`);
-        obsidianUrl = `obsidian://new?${parts.join('&')}`;
+        obsidianUrl = `obsidian://new?${parts.join('&amp;')}`;
       }
 
       window.open(obsidianUrl, '_self');
@@ -1297,30 +1274,30 @@ ${tagsYaml}
     function generateHtmlContent(markdown, metadata) {
       // 简单的 Markdown 转 HTML（基础转换）
       let htmlBody = markdown
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;">')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-        .replace(/^---$/gm, '<hr>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
+        .replace(/^### (.+)$/gm, '&lt;h3&gt;$1&lt;/h3&gt;')
+        .replace(/^## (.+)$/gm, '&lt;h2&gt;$1&lt;/h2&gt;')
+        .replace(/^# (.+)$/gm, '&lt;h1&gt;$1&lt;/h1&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;')
+        .replace(/\*(.+?)\*/g, '&lt;em&gt;$1&lt;/em&gt;')
+        .replace(/`([^`]+)`/g, '&lt;code&gt;$1&lt;/code&gt;')
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '&lt;img src="$2" alt="$1" style="max-width:100%;"&gt;')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '&lt;a href="$2" target="_blank"&gt;$1&lt;/a&gt;')
+        .replace(/^---$/gm, '&lt;hr&gt;')
+        .replace(/\n\n/g, '&lt;/p&gt;&lt;p&gt;')
+        .replace(/\n/g, '&lt;br&gt;');
 
       // 处理代码块
-      htmlBody = htmlBody.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-        return `<pre><code class="language-${lang}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+      htmlBody = htmlBody.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) =&gt; {
+        return `&lt;pre&gt;&lt;code class="language-${lang}"&gt;${code.replace(/&lt;/g, '&amp;lt;').replace(/&gt;/g, '&amp;gt;')}&lt;/code&gt;&lt;/pre&gt;`;
       });
 
-      return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${metadata.title}</title>
-  <style>
+      return `&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-CN"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;${metadata.title}&lt;/title&gt;
+  &lt;style&gt;
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
     h1 { color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
     h2, h3 { color: #374151; margin-top: 24px; }
@@ -1333,19 +1310,19 @@ ${tagsYaml}
     .metadata { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #6b7280; }
     details { margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 8px; }
     summary { cursor: pointer; font-weight: 600; }
-  </style>
-</head>
-<body>
-  <div class="metadata">
-    <p><strong>来源:</strong> <a href="${metadata.url}" target="_blank">${metadata.url}</a></p>
-    <p><strong>作者:</strong> ${metadata.author} | <strong>分类:</strong> ${metadata.category || '未分类'}</p>
-    <p><strong>保存时间:</strong> ${UtilModule.getBeijingTime()}</p>
-  </div>
-  <article>
-    <p>${htmlBody}</p>
-  </article>
-</body>
-</html>`;
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="metadata"&gt;
+    &lt;p&gt;&lt;strong&gt;来源:&lt;/strong&gt; &lt;a href="${metadata.url}" target="_blank"&gt;${metadata.url}&lt;/a&gt;&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;作者:&lt;/strong&gt; ${metadata.author} | &lt;strong&gt;分类:&lt;/strong&gt; ${metadata.category || '未分类'}&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;保存时间:&lt;/strong&gt; ${UtilModule.getBeijingTime()}&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;article&gt;
+    &lt;p&gt;${htmlBody}&lt;/p&gt;
+  &lt;/article&gt;
+&lt;/body&gt;
+&lt;/html&gt;`;
     }
 
     // 保存到 Notion（使用 GM_xmlhttpRequest 解决 CORS）
@@ -1378,16 +1355,16 @@ ${tagsYaml}
       }
 
       // 分类
-      if (config.notionPropCategory && metadata.category) {
+      if (config.notionPropCategory &amp;&amp; metadata.category) {
         properties[config.notionPropCategory] = {
           select: { name: metadata.category }
         };
       }
 
       // 标签
-      if (config.notionPropTags && metadata.tags && metadata.tags.length > 0) {
+      if (config.notionPropTags &amp;&amp; metadata.tags &amp;&amp; metadata.tags.length &gt; 0) {
         properties[config.notionPropTags] = {
-          multi_select: metadata.tags.slice(0, 10).map(tag => ({ name: tag.substring(0, 100) }))
+          multi_select: metadata.tags.slice(0, 10).map(tag =&gt; ({ name: tag.substring(0, 100) }))
         };
       }
 
@@ -1409,7 +1386,7 @@ ${tagsYaml}
       const children = markdownToNotionBlocks(markdown);
 
       // 创建页面
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) =&gt; {
         GM_xmlhttpRequest({
           method: 'POST',
           url: 'https://api.notion.com/v1/pages',
@@ -1424,7 +1401,7 @@ ${tagsYaml}
             children: children.slice(0, 100) // Notion 限制首次最多100个块
           }),
           onload: function(response) {
-            if (response.status >= 200 && response.status < 300) {
+            if (response.status &gt;= 200 &amp;&amp; response.status &lt; 300) {
               const data = JSON.parse(response.responseText);
               console.log('[Discourse Saver] Notion 保存成功:', data.id);
               resolve(data);
@@ -1447,13 +1424,13 @@ ${tagsYaml}
       const lines = markdown.split('\n');
       let i = 0;
 
-      while (i < lines.length) {
+      while (i &lt; lines.length) {
         const line = lines[i];
 
         // 跳过 YAML frontmatter
-        if (line === '---' && i === 0) {
+        if (line === '---' &amp;&amp; i === 0) {
           i++;
-          while (i < lines.length && lines[i] !== '---') i++;
+          while (i &lt; lines.length &amp;&amp; lines[i] !== '---') i++;
           i++;
           continue;
         }
@@ -1480,7 +1457,7 @@ ${tagsYaml}
           const lang = line.substring(3).trim() || 'plain text';
           let code = '';
           i++;
-          while (i < lines.length && !lines[i].startsWith('```')) {
+          while (i &lt; lines.length &amp;&amp; !lines[i].startsWith('```')) {
             code += lines[i] + '\n';
             i++;
           }
@@ -1535,7 +1512,7 @@ ${tagsYaml}
 
       databaseId = databaseId.replace(/-/g, '');
 
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) =&gt; {
         GM_xmlhttpRequest({
           method: 'GET',
           url: `https://api.notion.com/v1/databases/${databaseId}`,
@@ -1544,7 +1521,7 @@ ${tagsYaml}
             'Notion-Version': NOTION_API_VERSION
           },
           onload: function(response) {
-            if (response.status >= 200 && response.status < 300) {
+            if (response.status &gt;= 200 &amp;&amp; response.status &lt; 300) {
               const data = JSON.parse(response.responseText);
               resolve({ success: true, title: data.title?.[0]?.plain_text || 'Database' });
             } else {
@@ -1581,7 +1558,7 @@ ${tagsYaml}
         try {
           UtilModule.showNotification('正在嵌入图片（可能需要一些时间）...', 'info');
           const originalMarkdown = markdown;  // 保存原始内容以防出错
-          markdown = await UtilModule.embedImagesInMarkdown(markdown, (completed, total) => {
+          markdown = await UtilModule.embedImagesInMarkdown(markdown, (completed, total) =&gt; {
             UtilModule.showNotification(`正在嵌入图片 ${completed}/${total}...`, 'info');
           });
           // 检查结果是否有效
@@ -1612,7 +1589,7 @@ ${tagsYaml}
         UtilModule.showNotification('正在准备保存到 Obsidian...', 'info');
         const { markdown, fileName, comments, config } = await prepareData(targetPostNumber);
         await sendToObsidian(markdown, fileName, config);
-        const commentInfo = comments.length > 0 ? `（含${comments.length}条评论）` : '';
+        const commentInfo = comments.length &gt; 0 ? `（含${comments.length}条评论）` : '';
         UtilModule.showNotification(`已保存到 Obsidian${commentInfo}`, 'success');
         return { success: true, target: 'Obsidian' };
       } catch (error) {
@@ -1633,7 +1610,7 @@ ${tagsYaml}
         UtilModule.showNotification('正在准备保存到 Notion...', 'info');
         const { markdown, metadata, comments } = await prepareData(targetPostNumber);
         await saveToNotion(markdown, metadata, config);
-        const commentInfo = comments.length > 0 ? `（含${comments.length}条评论）` : '';
+        const commentInfo = comments.length &gt; 0 ? `（含${comments.length}条评论）` : '';
         UtilModule.showNotification(`已保存到 Notion${commentInfo}`, 'success');
         return { success: true, target: 'Notion' };
       } catch (error) {
@@ -1649,7 +1626,7 @@ ${tagsYaml}
         UtilModule.showNotification('正在准备导出 HTML...', 'info');
         const { markdown, fileName, metadata, comments, config } = await prepareData(targetPostNumber);
         downloadAsHtml(markdown, metadata, fileName, config);
-        const commentInfo = comments.length > 0 ? `（含${comments.length}条评论）` : '';
+        const commentInfo = comments.length &gt; 0 ? `（含${comments.length}条评论）` : '';
         UtilModule.showNotification(`已导出 HTML${commentInfo}`, 'success');
         return { success: true, target: 'HTML' };
       } catch (error) {
@@ -1666,7 +1643,7 @@ ${tagsYaml}
         console.log('[Discourse Saver] 配置:', config);
 
         // 检查是否至少选择了一个保存目标
-        if (!config.saveToObsidian && !config.saveToNotion && !config.exportHtml) {
+        if (!config.saveToObsidian &amp;&amp; !config.saveToNotion &amp;&amp; !config.exportHtml) {
           UtilModule.showNotification('请在设置中至少选择一个保存目标', 'warning');
           return;
         }
@@ -1681,11 +1658,11 @@ ${tagsYaml}
         let shouldSaveToObsidian = false;
 
         // Notion 和 HTML 先执行（不会跳转页面）
-        if (config.saveToNotion && config.notionToken && config.notionDatabaseId) {
+        if (config.saveToNotion &amp;&amp; config.notionToken &amp;&amp; config.notionDatabaseId) {
           tasks.push(
             saveToNotion(markdown, metadata, config)
-              .then(() => ({ success: true, target: 'Notion' }))
-              .catch(e => ({ success: false, target: 'Notion', error: e.message }))
+              .then(() =&gt; ({ success: true, target: 'Notion' }))
+              .catch(e =&gt; ({ success: false, target: 'Notion', error: e.message }))
           );
           taskNames.push('Notion');
         }
@@ -1693,11 +1670,11 @@ ${tagsYaml}
         if (config.exportHtml) {
           tasks.push(
             Promise.resolve()
-              .then(() => {
+              .then(() =&gt; {
                 downloadAsHtml(markdown, metadata, fileName, config);
                 return { success: true, target: 'HTML' };
               })
-              .catch(e => ({ success: false, target: 'HTML', error: e.message }))
+              .catch(e =&gt; ({ success: false, target: 'HTML', error: e.message }))
           );
           taskNames.push('HTML');
         }
@@ -1718,7 +1695,7 @@ ${tagsYaml}
 
         // 先并行执行 Notion 和 HTML 任务
         let results = [];
-        if (tasks.length > 0) {
+        if (tasks.length &gt; 0) {
           results = await Promise.allSettled(tasks);
         }
 
@@ -1726,12 +1703,12 @@ ${tagsYaml}
         const succeeded = [];
         const failed = [];
 
-        results.forEach((result, index) => {
-          if (result.status === 'fulfilled' && result.value.success) {
+        results.forEach((result, index) =&gt; {
+          if (result.status === 'fulfilled' &amp;&amp; result.value.success) {
             succeeded.push(result.value.target);
           } else {
             // 注意：taskNames 不包含 Obsidian（如果有的话），所以 index 对应的是非 Obsidian 任务
-            const nonObsidianTaskNames = taskNames.filter(t => t !== 'Obsidian');
+            const nonObsidianTaskNames = taskNames.filter(t =&gt; t !== 'Obsidian');
             const target = result.status === 'fulfilled' ? result.value.target : nonObsidianTaskNames[index];
             const error = result.status === 'fulfilled' ? result.value.error : result.reason?.message;
             failed.push({ target, error });
@@ -1740,34 +1717,34 @@ ${tagsYaml}
         });
 
         // 显示中间结果（如果有非 Obsidian 任务完成）
-        const commentInfo = comments.length > 0 ? `（含${comments.length}条评论）` : '';
+        const commentInfo = comments.length &gt; 0 ? `（含${comments.length}条评论）` : '';
 
-        if (succeeded.length > 0 && !shouldSaveToObsidian) {
+        if (succeeded.length &gt; 0 &amp;&amp; !shouldSaveToObsidian) {
           if (failed.length === 0) {
             UtilModule.showNotification(`已保存到 ${succeeded.join('、')}${commentInfo}`, 'success');
           } else {
             UtilModule.showNotification(
-              `已保存到 ${succeeded.join('、')}${commentInfo}，${failed.map(f => f.target).join('、')} 失败`,
+              `已保存到 ${succeeded.join('、')}${commentInfo}，${failed.map(f =&gt; f.target).join('、')} 失败`,
               'warning'
             );
           }
-        } else if (failed.length > 0 && !shouldSaveToObsidian) {
-          UtilModule.showNotification(`${failed.map(f => f.target).join('、')} 保存失败`, 'error');
+        } else if (failed.length &gt; 0 &amp;&amp; !shouldSaveToObsidian) {
+          UtilModule.showNotification(`${failed.map(f =&gt; f.target).join('、')} 保存失败`, 'error');
         }
 
         // 最后执行 Obsidian 保存（会跳转页面）
         if (shouldSaveToObsidian) {
           // 给其他任务一个短暂的时间确保完成
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise(resolve =&gt; setTimeout(resolve, 300));
 
           try {
             // 显示即将跳转提示
-            if (succeeded.length > 0 || failed.length > 0) {
-              const msg = succeeded.length > 0
+            if (succeeded.length &gt; 0 || failed.length &gt; 0) {
+              const msg = succeeded.length &gt; 0
                 ? `${succeeded.join('、')} 已完成，正在跳转到 Obsidian...`
                 : `正在跳转到 Obsidian...`;
               UtilModule.showNotification(msg, 'info');
-              await new Promise(resolve => setTimeout(resolve, 500));
+              await new Promise(resolve =&gt; setTimeout(resolve, 500));
             }
 
             await sendToObsidian(markdown, fileName, config);
@@ -1968,7 +1945,7 @@ ${tagsYaml}
 
       const hasCopyLinkClass = className.includes('post-action-menu__copy-link') ||
                                 className.includes('copy-link');
-      const hasShareUrl = dataShareUrl !== null && dataShareUrl !== '';
+      const hasShareUrl = dataShareUrl !== null &amp;&amp; dataShareUrl !== '';
       const hasShareClass = className.includes('share');
       const hasShareTitle = title.includes('将此帖子的链接复制到剪贴板') ||
                             title.includes('复制到剪贴板') ||
@@ -2022,7 +1999,7 @@ ${tagsYaml}
 
     // 劫持链接按钮
     function hijackLinkButton() {
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', (e) =&gt; {
         let target = e.target.closest('button');
         if (!target) {
           target = e.target.closest('a');
@@ -2034,7 +2011,7 @@ ${tagsYaml}
 
         const linkResult = isLinkButton(target);
 
-        if (target && linkResult.isLink) {
+        if (target &amp;&amp; linkResult.isLink) {
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
@@ -2057,7 +2034,7 @@ ${tagsYaml}
             clearTimeout(linkClickTimer);
           }
 
-          if (linkClickCount === 2 && isSameButton) {
+          if (linkClickCount === 2 &amp;&amp; isSameButton) {
             // 双击：复制链接
             linkClickCount = 0;
             lastLinkPostNumber = null;
@@ -2065,7 +2042,7 @@ ${tagsYaml}
           } else {
             // 等待判断
             const postNumber = linkResult.postNumber;
-            linkClickTimer = setTimeout(() => {
+            linkClickTimer = setTimeout(() =&gt; {
               if (linkClickCount === 1) {
                 // 单击：保存
                 if (postNumber === '1') {
@@ -2095,129 +2072,129 @@ ${tagsYaml}
       const overlay = document.createElement('div');
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
-        <div class="ds-settings-panel">
-          <h2>📝 Discourse Saver 设置 (V4.5.3)</h2>
+        &lt;div class="ds-settings-panel"&gt;
+          &lt;h2&gt;📝 Discourse Saver 设置 (V4.5.4)&lt;/h2&gt;
 
-          <div class="ds-section-title">保存目标</div>
+          &lt;div class="ds-section-title"&gt;保存目标&lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-save-obsidian" ${config.saveToObsidian ? 'checked' : ''}>
-            <label for="ds-save-obsidian">保存到 Obsidian</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-save-obsidian" ${config.saveToObsidian ? 'checked' : ''}&gt;
+            &lt;label for="ds-save-obsidian"&gt;保存到 Obsidian&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-save-notion" ${config.saveToNotion ? 'checked' : ''}>
-            <label for="ds-save-notion">保存到 Notion</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-save-notion" ${config.saveToNotion ? 'checked' : ''}&gt;
+            &lt;label for="ds-save-notion"&gt;保存到 Notion&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-export-html" ${config.exportHtml ? 'checked' : ''}>
-            <label for="ds-export-html">导出为 HTML 文件</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-export-html" ${config.exportHtml ? 'checked' : ''}&gt;
+            &lt;label for="ds-export-html"&gt;导出为 HTML 文件&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-section-title">Obsidian 设置</div>
+          &lt;div class="ds-section-title"&gt;Obsidian 设置&lt;/div&gt;
 
-          <div class="ds-form-group">
-            <label>Vault 名称</label>
-            <input type="text" id="ds-vault" value="${config.vaultName}" placeholder="你的Vault名称">
-            <div class="ds-hint">留空则保存到默认Vault</div>
-          </div>
+          &lt;div class="ds-form-group"&gt;
+            &lt;label&gt;Vault 名称&lt;/label&gt;
+            &lt;input type="text" id="ds-vault" value="${config.vaultName}" placeholder="你的Vault名称"&gt;
+            &lt;div class="ds-hint"&gt;留空则保存到默认Vault&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group">
-            <label>保存文件夹路径</label>
-            <input type="text" id="ds-folder" value="${config.folderPath}" placeholder="Discourse收集箱">
-          </div>
+          &lt;div class="ds-form-group"&gt;
+            &lt;label&gt;保存文件夹路径&lt;/label&gt;
+            &lt;input type="text" id="ds-folder" value="${config.folderPath}" placeholder="Discourse收集箱"&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-metadata" ${config.addMetadata ? 'checked' : ''}>
-            <label for="ds-metadata">添加元数据 (YAML frontmatter)</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-metadata" ${config.addMetadata ? 'checked' : ''}&gt;
+            &lt;label for="ds-metadata"&gt;添加元数据 (YAML frontmatter)&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-advanced-uri" ${config.useAdvancedUri ? 'checked' : ''}>
-            <label for="ds-advanced-uri">使用 Advanced URI 插件</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-advanced-uri" ${config.useAdvancedUri ? 'checked' : ''}&gt;
+            &lt;label for="ds-advanced-uri"&gt;使用 Advanced URI 插件&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-embed-images" ${config.embedImages ? 'checked' : ''}>
-            <label for="ds-embed-images">嵌入图片 (Base64)</label>
-            <div class="ds-hint" style="margin-left: 26px; margin-top: 2px;">解决手机端图片无法显示问题，会增加文件大小</div>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-embed-images" ${config.embedImages ? 'checked' : ''}&gt;
+            &lt;label for="ds-embed-images"&gt;嵌入图片 (Base64)&lt;/label&gt;
+            &lt;div class="ds-hint" style="margin-left: 26px; margin-top: 2px;"&gt;解决手机端图片无法显示问题，会增加文件大小&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-section-title">Notion 设置</div>
+          &lt;div class="ds-section-title"&gt;Notion 设置&lt;/div&gt;
 
-          <div class="ds-form-group">
-            <label>Notion API Token</label>
-            <input type="text" id="ds-notion-token" value="${config.notionToken}" placeholder="secret_xxx...">
-            <div class="ds-hint">从 Notion 集成页面获取</div>
-          </div>
+          &lt;div class="ds-form-group"&gt;
+            &lt;label&gt;Notion API Token&lt;/label&gt;
+            &lt;input type="text" id="ds-notion-token" value="${config.notionToken}" placeholder="secret_xxx..."&gt;
+            &lt;div class="ds-hint"&gt;从 Notion 集成页面获取&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group">
-            <label>Database ID</label>
-            <input type="text" id="ds-notion-db" value="${config.notionDatabaseId}" placeholder="32位数据库ID">
-          </div>
+          &lt;div class="ds-form-group"&gt;
+            &lt;label&gt;Database ID&lt;/label&gt;
+            &lt;input type="text" id="ds-notion-db" value="${config.notionDatabaseId}" placeholder="32位数据库ID"&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group" style="display: flex; gap: 8px;">
-            <button class="ds-btn ds-btn-secondary" id="ds-test-notion" style="flex: none; padding: 8px 16px;">测试连接</button>
-            <span id="ds-notion-status" style="line-height: 36px; color: #6b7280; font-size: 13px;"></span>
-          </div>
+          &lt;div class="ds-form-group" style="display: flex; gap: 8px;"&gt;
+            &lt;button class="ds-btn ds-btn-secondary" id="ds-test-notion" style="flex: none; padding: 8px 16px;"&gt;测试连接&lt;/button&gt;
+            &lt;span id="ds-notion-status" style="line-height: 36px; color: #6b7280; font-size: 13px;"&gt;&lt;/span&gt;
+          &lt;/div&gt;
 
-          <div class="ds-section-title">HTML 导出设置</div>
+          &lt;div class="ds-section-title"&gt;HTML 导出设置&lt;/div&gt;
 
-          <div class="ds-form-group">
-            <label>导出文件夹名</label>
-            <input type="text" id="ds-html-folder" value="${config.htmlExportFolder}" placeholder="Discourse导出">
-            <div class="ds-hint">下载的HTML文件将使用此前缀</div>
-          </div>
+          &lt;div class="ds-form-group"&gt;
+            &lt;label&gt;导出文件夹名&lt;/label&gt;
+            &lt;input type="text" id="ds-html-folder" value="${config.htmlExportFolder}" placeholder="Discourse导出"&gt;
+            &lt;div class="ds-hint"&gt;下载的HTML文件将使用此前缀&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-section-title">评论设置</div>
+          &lt;div class="ds-section-title"&gt;评论设置&lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-comments" ${config.saveComments ? 'checked' : ''}>
-            <label for="ds-comments">保存评论</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-comments" ${config.saveComments ? 'checked' : ''}&gt;
+            &lt;label for="ds-comments"&gt;保存评论&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-fold" ${config.foldComments ? 'checked' : ''}>
-            <label for="ds-fold">折叠评论 (使用 details 标签)</label>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-fold" ${config.foldComments ? 'checked' : ''}&gt;
+            &lt;label for="ds-fold"&gt;折叠评论 (使用 details 标签)&lt;/label&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-all-comments" ${config.saveAllComments ? 'checked' : ''}>
-            <label for="ds-all-comments">保存全部评论</label>
-            <div class="ds-hint" style="margin-left: 26px; margin-top: 2px;">与"楼层范围"互斥</div>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-all-comments" ${config.saveAllComments ? 'checked' : ''}&gt;
+            &lt;label for="ds-all-comments"&gt;保存全部评论&lt;/label&gt;
+            &lt;div class="ds-hint" style="margin-left: 26px; margin-top: 2px;"&gt;与"楼层范围"互斥&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group">
-            <label>评论数量上限</label>
-            <input type="number" id="ds-comment-count" value="${config.commentCount}" min="1" max="9999">
-            <div class="ds-hint">当不勾选"保存全部"时生效</div>
-          </div>
+          &lt;div class="ds-form-group"&gt;
+            &lt;label&gt;评论数量上限&lt;/label&gt;
+            &lt;input type="number" id="ds-comment-count" value="${config.commentCount}" min="1" max="9999"&gt;
+            &lt;div class="ds-hint"&gt;当不勾选"保存全部"时生效&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-section-title">楼层范围</div>
+          &lt;div class="ds-section-title"&gt;楼层范围&lt;/div&gt;
 
-          <div class="ds-form-group ds-checkbox-group">
-            <input type="checkbox" id="ds-floor-range" ${config.useFloorRange ? 'checked' : ''}>
-            <label for="ds-floor-range">启用楼层范围过滤</label>
-            <div class="ds-hint" style="margin-left: 26px; margin-top: 2px;">与"保存全部评论"互斥</div>
-          </div>
+          &lt;div class="ds-form-group ds-checkbox-group"&gt;
+            &lt;input type="checkbox" id="ds-floor-range" ${config.useFloorRange ? 'checked' : ''}&gt;
+            &lt;label for="ds-floor-range"&gt;启用楼层范围过滤&lt;/label&gt;
+            &lt;div class="ds-hint" style="margin-left: 26px; margin-top: 2px;"&gt;与"保存全部评论"互斥&lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-form-group" style="display: flex; gap: 12px;">
-            <div style="flex: 1;">
-              <label>起始楼层</label>
-              <input type="number" id="ds-floor-from" value="${config.floorFrom}" min="1">
-            </div>
-            <div style="flex: 1;">
-              <label>结束楼层</label>
-              <input type="number" id="ds-floor-to" value="${config.floorTo}" min="1">
-            </div>
-          </div>
+          &lt;div class="ds-form-group" style="display: flex; gap: 12px;"&gt;
+            &lt;div style="flex: 1;"&gt;
+              &lt;label&gt;起始楼层&lt;/label&gt;
+              &lt;input type="number" id="ds-floor-from" value="${config.floorFrom}" min="1"&gt;
+            &lt;/div&gt;
+            &lt;div style="flex: 1;"&gt;
+              &lt;label&gt;结束楼层&lt;/label&gt;
+              &lt;input type="number" id="ds-floor-to" value="${config.floorTo}" min="1"&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
 
-          <div class="ds-btn-group">
-            <button class="ds-btn ds-btn-secondary" id="ds-cancel">取消</button>
-            <button class="ds-btn ds-btn-primary" id="ds-save">保存设置</button>
-          </div>
-        </div>
+          &lt;div class="ds-btn-group"&gt;
+            &lt;button class="ds-btn ds-btn-secondary" id="ds-cancel"&gt;取消&lt;/button&gt;
+            &lt;button class="ds-btn ds-btn-primary" id="ds-save"&gt;保存设置&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
       `;
 
       document.body.appendChild(overlay);
@@ -2226,20 +2203,20 @@ ${tagsYaml}
       const allCommentsCheckbox = overlay.querySelector('#ds-all-comments');
       const floorRangeCheckbox = overlay.querySelector('#ds-floor-range');
 
-      allCommentsCheckbox.addEventListener('change', () => {
+      allCommentsCheckbox.addEventListener('change', () =&gt; {
         if (allCommentsCheckbox.checked) {
           floorRangeCheckbox.checked = false;
         }
       });
 
-      floorRangeCheckbox.addEventListener('change', () => {
+      floorRangeCheckbox.addEventListener('change', () =&gt; {
         if (floorRangeCheckbox.checked) {
           allCommentsCheckbox.checked = false;
         }
       });
 
       // 测试Notion连接
-      overlay.querySelector('#ds-test-notion').addEventListener('click', async () => {
+      overlay.querySelector('#ds-test-notion').addEventListener('click', async () =&gt; {
         const token = overlay.querySelector('#ds-notion-token').value.trim();
         const dbId = overlay.querySelector('#ds-notion-db').value.trim();
         const statusEl = overlay.querySelector('#ds-notion-status');
@@ -2269,12 +2246,12 @@ ${tagsYaml}
       });
 
       // 取消按钮
-      overlay.querySelector('#ds-cancel').addEventListener('click', () => {
+      overlay.querySelector('#ds-cancel').addEventListener('click', () =&gt; {
         overlay.remove();
       });
 
       // 保存按钮
-      overlay.querySelector('#ds-save').addEventListener('click', () => {
+      overlay.querySelector('#ds-save').addEventListener('click', () =&gt; {
         const newConfig = {
           // 保存目标
           saveToObsidian: overlay.querySelector('#ds-save-obsidian').checked,
@@ -2308,7 +2285,7 @@ ${tagsYaml}
       });
 
       // 点击遮罩关闭
-      overlay.addEventListener('click', (e) => {
+      overlay.addEventListener('click', (e) =&gt; {
         if (e.target === overlay) {
           overlay.remove();
         }
@@ -2322,12 +2299,12 @@ ${tagsYaml}
 
       // 注册油猴菜单
       GM_registerMenuCommand('⚙️ 设置', showSettingsPanel);
-      GM_registerMenuCommand('📥 保存当前帖子（全部目标）', () => SaveModule.save(null));
-      GM_registerMenuCommand('📝 仅保存到 Obsidian', () => SaveModule.saveToObsidianOnly(null));
-      GM_registerMenuCommand('📑 仅保存到 Notion', () => SaveModule.saveToNotionOnly(null));
-      GM_registerMenuCommand('📄 仅导出为 HTML', () => SaveModule.exportHtmlOnly(null));
+      GM_registerMenuCommand('📥 保存当前帖子（全部目标）', () =&gt; SaveModule.save(null));
+      GM_registerMenuCommand('📝 仅保存到 Obsidian', () =&gt; SaveModule.saveToObsidianOnly(null));
+      GM_registerMenuCommand('📑 仅保存到 Notion', () =&gt; SaveModule.saveToNotionOnly(null));
+      GM_registerMenuCommand('📄 仅导出为 HTML', () =&gt; SaveModule.exportHtmlOnly(null));
 
-      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.3)');
+      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.4)');
     }
 
     return { init, showSettingsPanel };
@@ -2339,43 +2316,61 @@ ${tagsYaml}
   UIModule.init();
 
 })();
-  </script>
-  
+</textarea>
+        <p style="margin-top: 10px;">
+          <button class="btn btn-primary" style="padding: 10px 20px; font-size: 14px;" onclick="copyScript()">复制脚本代码</button>
+        </p>
+      </div>
+
+      <div class="section">
+        <h2>更新日志 (V4.5.4)</h2>
+        <div class="changelog">
+          <ul>
+            <li><strong>修复</strong>: 图片嵌入后无法导入 Obsidian 的问题</li>
+            <li><strong>优化</strong>: 内容过大时自动切换为文件下载模式</li>
+            <li><strong>移除</strong>: 不稳定的剪贴板模式</li>
+            <li><strong>提升</strong>: 单张图片限制提升至 15MB</li>
+            <li><strong>提升</strong>: 总图片大小限制提升至 100MB</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>作者: 阿成 | <a href="https://github.com/AchengBusiness/discourse-saver" target="_blank">GitHub</a></p>
+    </div>
+  </div>
+
   <script>
-    // 从 script 标签读取脚本内容
-    const scriptSource = document.getElementById('scriptSource');
-    const SCRIPT_CODE = scriptSource.textContent.trim();
-    
-    document.getElementById('scriptArea').value = SCRIPT_CODE;
-    
-    function copyScript() {
-      const textarea = document.getElementById('scriptArea');
-      textarea.select();
-      textarea.setSelectionRange(0, 99999);
+    // 脚本内容（用于安装）
+    const scriptContent = document.getElementById('scriptContent').value;
+
+    function installScript() {
+      // 创建 blob URL
+      const blob = new Blob([scriptContent], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
       
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(SCRIPT_CODE).then(() => {
-          showToast();
-        }).catch(() => {
-          fallbackCopy();
-        });
-      } else {
-        fallbackCopy();
-      }
+      // 尝试触发油猴安装
+      const installUrl = url.replace('blob:', '') + '.user.js';
+      
+      // 方法1: 直接打开 blob URL（某些油猴版本支持）
+      const a = document.createElement('a');
+      a.href = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(scriptContent);
+      a.download = 'discourse-saver.user.js';
+      
+      // 触发下载
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      alert('脚本文件已下载！\\n\\n请在 Tampermonkey/Violentmonkey 中：\\n1. 点击扩展图标\\n2. 选择"添加新脚本"或"创建新脚本"\\n3. 粘贴下载的脚本内容\\n4. 保存即可');
     }
-    
-    function fallbackCopy() {
-      const textarea = document.getElementById('scriptArea');
+
+    function copyScript() {
+      const textarea = document.getElementById('scriptContent');
       textarea.select();
-      textarea.setSelectionRange(0, 99999);
       document.execCommand('copy');
-      showToast();
-    }
-    
-    function showToast() {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+      alert('脚本代码已复制到剪贴板！\\n\\n请在油猴中新建脚本并粘贴。');
     }
   </script>
 </body>

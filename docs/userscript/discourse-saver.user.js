@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.3
+// @version      4.5.4
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -179,8 +179,8 @@
 
     // 图片嵌入限制常量
     const IMAGE_LIMITS = {
-      MAX_SINGLE_SIZE: 5 * 1024 * 1024,     // 单张图片最大 5MB
-      MAX_TOTAL_SIZE: 50 * 1024 * 1024,     // 总大小最大 50MB
+      MAX_SINGLE_SIZE: 15 * 1024 * 1024,    // 单张图片最大 15MB
+      MAX_TOTAL_SIZE: 100 * 1024 * 1024,    // 总大小最大 100MB
       MAX_IMAGE_COUNT: 50                    // 最多嵌入 50 张图片
     };
 
@@ -985,6 +985,25 @@ ${tagsYaml}
       };
     }
 
+    // 下载 Markdown 文件（当内容过大无法通过 URI 传输时使用）
+    function downloadMarkdownFile(markdown, fileName, folderPath) {
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // 提示用户
+      const vaultPath = folderPath || 'Discourse收集箱';
+      UtilModule.showNotification(`文件已下载，请手动放入 Obsidian: ${vaultPath}/`, 'info');
+      console.log(`[Discourse Saver] 内容过大，已下载为文件: ${fileName}.md`);
+      console.log(`[Discourse Saver] 请将文件移动到 Obsidian vault 的 "${vaultPath}" 文件夹`);
+    }
+
     // 保存到 Obsidian
     async function sendToObsidian(markdown, fileName, config) {
       const vaultName = config.vaultName;
@@ -993,24 +1012,24 @@ ${tagsYaml}
 
       // 计算 URL 编码后的内容长度
       const encodedLength = encode(markdown).length;
-      // URL 长度限制约 2MB，但为安全起见设置 50KB 阈值使用剪贴板模式
+      // URL 长度限制约 2MB，但浏览器实际限制更低，设置 50KB 阈值
       const URL_LENGTH_THRESHOLD = 50000;
-      const useClipboard = encodedLength > URL_LENGTH_THRESHOLD;
+      const contentTooLarge = encodedLength > URL_LENGTH_THRESHOLD;
 
+      // 如果内容过大（通常是因为嵌入了 Base64 图片），直接下载文件
+      if (contentTooLarge) {
+        console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB > 50KB)，切换到文件下载模式`);
+        downloadMarkdownFile(markdown, fileName, folderPath);
+        return true;
+      }
+
+      // 内容不大，使用 URI 方式
       let obsidianUrl;
       if (config.useAdvancedUri) {
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`filepath=${encode(`${folderPath}/${fileName}.md`)}`);
-
-        if (useClipboard) {
-          // 内容过大，使用剪贴板模式（解决 Base64 图片导致 URL 超长问题）
-          GM_setClipboard(markdown, 'text');
-          parts.push(`clipboard=true`);
-          console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，使用剪贴板模式`);
-        } else {
-          parts.push(`data=${encode(markdown)}`);
-        }
+        parts.push(`data=${encode(markdown)}`);
         parts.push(`mode=overwrite`);  // 覆盖已存在的文件
         obsidianUrl = `obsidian://advanced-uri?${parts.join('&')}`;
       } else {
@@ -1018,16 +1037,7 @@ ${tagsYaml}
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`file=${encode(`${folderPath}/${fileName}`)}`);
-
-        if (useClipboard) {
-          // 普通模式不支持剪贴板，提示用户手动粘贴
-          GM_setClipboard(markdown, 'text');
-          // 创建空文件，用户需手动粘贴
-          parts.push(`content=${encode('<!-- 内容已复制到剪贴板，请按 Ctrl+V / Cmd+V 粘贴 -->')}`);
-          alert('内容过大，已复制到剪贴板。\n\n请在 Obsidian 打开文件后按 Ctrl+V (Mac: Cmd+V) 粘贴。');
-        } else {
-          parts.push(`content=${encode(markdown)}`);
-        }
+        parts.push(`content=${encode(markdown)}`);
         parts.push(`overwrite=true`);
         obsidianUrl = `obsidian://new?${parts.join('&')}`;
       }
@@ -1859,7 +1869,7 @@ ${tagsYaml}
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
         <div class="ds-settings-panel">
-          <h2>📝 Discourse Saver 设置 (V4.5.3)</h2>
+          <h2>📝 Discourse Saver 设置 (V4.5.4)</h2>
 
           <div class="ds-section-title">保存目标</div>
 
@@ -2090,7 +2100,7 @@ ${tagsYaml}
       GM_registerMenuCommand('📑 仅保存到 Notion', () => SaveModule.saveToNotionOnly(null));
       GM_registerMenuCommand('📄 仅导出为 HTML', () => SaveModule.exportHtmlOnly(null));
 
-      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.3)');
+      console.log('[Discourse Saver] 油猴脚本已加载 (V4.5.4)');
     }
 
     return { init, showSettingsPanel };
