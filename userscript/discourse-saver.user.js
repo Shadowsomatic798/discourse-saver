@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.5.9
+// @version      4.5.10
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -21,8 +21,34 @@
 // @match        https://discourse.julialang.org/*
 // @match        https://forum.rclone.org/*
 // @match        https://discourse.nixos.org/*
+// @match        https://discuss.kotlinlang.org/*
+// @match        https://forum.gitlab.com/*
+// @match        https://discuss.elastic.co/*
+// @match        https://discuss.hashicorp.com/*
+// @match        https://community.grafana.com/*
+// @match        https://discuss.codecademy.com/*
+// @match        https://community.letsencrypt.org/*
+// @match        https://discuss.atom.io/*
+// @match        https://forum.proxmox.com/*
+// @match        https://discuss.rubyonrails.org/*
+// @match        https://community.home-assistant.io/*
+// @match        https://forum.unity.com/*
+// @match        https://forums.unrealengine.com/*
+// @match        https://discourse.llvm.org/*
+// @match        https://discuss.ocaml.org/*
+// @match        https://elixirforum.com/*
+// @match        https://discuss.flarum.org/*
+// @match        https://community.paperspace.com/*
+// @match        https://forum.seafile.com/*
+// @match        https://forum.syncthing.net/*
+// @match        https://community.hivemq.com/*
+// @match        https://forum.owncloud.com/*
+// @match        https://community.bitwarden.com/*
+// @match        https://discuss.emberjs.com/*
 // @include      *://*discourse*/*
 // @include      *://*forum*/*
+// @include      *://*discuss*/*
+// @include      *://*community*/*
 // @require      https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.js
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -357,34 +383,61 @@
   // 模块3: 内容提取 (ExtractModule)
   // ============================================================
   const ExtractModule = (function() {
-    // 检测是否是 Discourse 论坛
+    // 检测是否是 Discourse 论坛 - v4.5.10 增强版
     function isDiscourseForumPage() {
       // 多种检测方式
       const checks = [
         // 检查 Discourse 特有的 meta 标签
         () => document.querySelector('meta[name="discourse_theme_id"]') !== null,
         () => document.querySelector('meta[name="discourse_current_homepage"]') !== null,
+        () => document.querySelector('meta[name="generator"][content*="Discourse"]') !== null,
         // 检查 Discourse 特有的 DOM 结构
         () => document.querySelector('#ember-basic-dropdown-wormhole') !== null,
         () => document.querySelector('.ember-application') !== null,
         () => document.querySelector('#main-outlet') !== null,
+        () => document.querySelector('.post-stream') !== null,
+        () => document.querySelector('.topic-list') !== null,
+        () => document.querySelector('.d-header') !== null,
+        () => document.querySelector('.discourse-root') !== null,
         // 检查 Discourse 特有的 CSS 类
         () => document.body.classList.contains('discourse-touch') ||
               document.body.classList.contains('docked') ||
               document.body.classList.contains('logged-in') ||
-              document.body.classList.contains('navigation-topics'),
+              document.body.classList.contains('navigation-topics') ||
+              document.body.classList.contains('categories-list') ||
+              document.body.classList.contains('archetype-regular'),
+        // 检查 HTML 标签
+        () => document.documentElement.classList.contains('discourse-no-hierarchical-menu') ||
+              document.documentElement.classList.contains('discourse-hierarchical-menu'),
         // 检查 Discourse 特有的脚本
         () => typeof window.Discourse !== 'undefined',
-        () => typeof window.Ember !== 'undefined'
+        () => typeof window.Ember !== 'undefined',
+        // 检查 Discourse 特有的预加载数据
+        () => document.getElementById('data-preloaded') !== null,
+        // 检查 Discourse 特有的 API 端点（通过已加载的脚本）
+        () => {
+          const scripts = document.querySelectorAll('script[src*="discourse"]');
+          return scripts.length > 0;
+        },
+        // 检查页面上是否有 Discourse 特有的元素
+        () => document.querySelector('.category-breadcrumb') !== null,
+        () => document.querySelector('.topic-post') !== null,
+        () => document.querySelector('.crawler-post') !== null
       ];
 
-      return checks.some(check => {
+      const result = checks.some(check => {
         try {
           return check();
         } catch (e) {
           return false;
         }
       });
+
+      if (result) {
+        console.log('[Discourse Saver] 检测到 Discourse 论坛');
+      }
+
+      return result;
     }
 
     // 检查是否在帖子页面 - 增强版
@@ -730,74 +783,214 @@
         console.log('[Discourse Saver] 调试 - 分类链接:', document.querySelectorAll('a[href*="/c/"]'));
       }
 
-      // 提取标签 - 增强版
+      // 提取标签 - v4.5.10 超级增强版
       const tags = [];
       const tagSelectors = [
+        // Discourse 标准选择器
         '.discourse-tags .discourse-tag',
         '.list-tags .discourse-tag',
         '.topic-header-extra .discourse-tag',
-        '.tag-drop .discourse-tag'
+        '.tag-drop .discourse-tag',
+        // 更多变体
+        '.topic-tags .discourse-tag',
+        '.tags-wrapper .discourse-tag',
+        'a.discourse-tag',
+        '.tag-list .tag',
+        '.topic-map .tag',
+        // Linux.do 特殊选择器
+        '.extra-info-wrapper .discourse-tag',
+        '.extra-info .discourse-tag',
+        '#topic-title .discourse-tag',
+        '.title-wrapper .discourse-tag',
+        // 链接形式的标签
+        'a[href*="/tag/"]',
+        'a[href*="/tags/"]',
+        // 带 data 属性的标签
+        '[data-tag-name]',
+        '.tag-badge'
       ];
 
       for (const selector of tagSelectors) {
-        const tagElements = document.querySelectorAll(selector);
-        tagElements.forEach(tag => {
-          const tagText = tag.textContent.trim();
-          if (tagText && !tags.includes(tagText)) {
-            tags.push(tagText);
-          }
-        });
+        try {
+          const tagElements = document.querySelectorAll(selector);
+          tagElements.forEach(tag => {
+            let tagText = tag.textContent.trim();
+            // 如果有 data-tag-name 属性，优先使用
+            if (tag.dataset && tag.dataset.tagName) {
+              tagText = tag.dataset.tagName;
+            }
+            // 从 href 提取标签名
+            if (!tagText && tag.href) {
+              const tagMatch = tag.href.match(/\/tags?\/([^/?]+)/);
+              if (tagMatch) {
+                tagText = decodeURIComponent(tagMatch[1]);
+              }
+            }
+            if (tagText && !tags.includes(tagText) && tagText.length < 50) {
+              // 过滤一些明显不是标签的内容
+              if (!/^[\d\s]+$/.test(tagText) && !tagText.includes('http')) {
+                tags.push(tagText);
+              }
+            }
+          });
+        } catch (e) {
+          // 忽略选择器错误
+        }
+      }
+
+      if (tags.length > 0) {
+        console.log(`[Discourse Saver] 找到 ${tags.length} 个标签:`, tags);
+      } else {
+        console.log('[Discourse Saver] 未找到标签');
       }
 
       return { title, contentHTML, url, author, topicId, category, tags };
     }
 
-    // 提取评论（DOM方式）
+    // 提取评论（DOM方式）- v4.5.10 增强版
     function extractComments(maxCount = 100) {
       const comments = [];
-      let commentElements = document.querySelectorAll('div.crawler-post');
+      const baseUrl = window.location.origin;
 
-      if (commentElements.length === 0) {
-        commentElements = document.querySelectorAll('.topic-post');
+      // 多种评论容器选择器
+      const containerSelectors = [
+        'div.crawler-post',
+        '.topic-post',
+        '.post-stream .post',
+        'article.post',
+        '[itemtype*="Comment"]',
+        '.reply'
+      ];
+
+      let commentElements = [];
+      for (const selector of containerSelectors) {
+        commentElements = document.querySelectorAll(selector);
+        if (commentElements.length > 0) {
+          console.log(`[Discourse Saver] 使用选择器 "${selector}" 找到 ${commentElements.length} 个评论元素`);
+          break;
+        }
       }
 
       const commentNodes = Array.from(commentElements).slice(1, maxCount + 1);
-      const baseUrl = window.location.origin;
 
       for (const el of commentNodes) {
-        const usernameEl = el.querySelector('.creator span[itemprop="name"]') ||
-                           el.querySelector('.names .first a') ||
-                           el.querySelector('.username a');
+        // 增强的用户名选择器
+        const usernameSelectors = [
+          '.creator span[itemprop="name"]',
+          '.names .first a',
+          '.username a',
+          '.author-name',
+          '[itemprop="author"] [itemprop="name"]',
+          '.post-user a',
+          '.user-info .name'
+        ];
+
+        let usernameEl = null;
+        for (const selector of usernameSelectors) {
+          usernameEl = el.querySelector(selector);
+          if (usernameEl) break;
+        }
         const username = usernameEl ? usernameEl.textContent.trim() : '匿名用户';
 
         // 提取用户主页链接
         let userUrl = '';
-        const userLinkEl = el.querySelector('.creator a[href*="/u/"]') ||
-                           el.querySelector('.names .first a[href*="/u/"]') ||
-                           el.querySelector('.username a[href*="/u/"]') ||
-                           el.querySelector('a[data-user-card]');
-        if (userLinkEl) {
-          userUrl = userLinkEl.href;
-        } else if (username && username !== '匿名用户') {
+        const userLinkSelectors = [
+          '.creator a[href*="/u/"]',
+          '.names .first a[href*="/u/"]',
+          '.username a[href*="/u/"]',
+          'a[data-user-card]',
+          '.author-name a',
+          '.post-user a[href*="/u/"]'
+        ];
+
+        for (const selector of userLinkSelectors) {
+          const userLinkEl = el.querySelector(selector);
+          if (userLinkEl) {
+            userUrl = userLinkEl.href;
+            break;
+          }
+        }
+
+        if (!userUrl && username && username !== '匿名用户') {
           userUrl = `${baseUrl}/u/${username}`;
         }
 
-        const contentEl = el.querySelector('.post[itemprop="text"]') ||
-                          el.querySelector('.cooked');
+        // 增强的内容选择器
+        const contentSelectors = [
+          '.post[itemprop="text"]',
+          '.cooked',
+          '.post-content',
+          '.post-body',
+          '[itemprop="text"]',
+          '.content'
+        ];
+
+        let contentEl = null;
+        for (const selector of contentSelectors) {
+          contentEl = el.querySelector(selector);
+          if (contentEl) break;
+        }
         const contentHTML = contentEl ? contentEl.innerHTML : '';
 
-        const positionEl = el.querySelector('span[itemprop="position"]') ||
-                           el.querySelector('.post-number');
-        const position = positionEl ? positionEl.textContent.trim() : (comments.length + 2).toString();
+        // 增强的楼层选择器
+        const positionSelectors = [
+          'span[itemprop="position"]',
+          '.post-number',
+          '.post-count',
+          '[data-post-number]'
+        ];
 
-        const timeEl = el.querySelector('time.post-time') ||
-                       el.querySelector('.relative-date');
+        let positionEl = null;
+        for (const selector of positionSelectors) {
+          positionEl = el.querySelector(selector);
+          if (positionEl) break;
+        }
+        let position = (comments.length + 2).toString();
+        if (positionEl) {
+          position = positionEl.textContent.trim() || positionEl.dataset?.postNumber || position;
+        }
+        // 尝试从元素属性获取
+        if (el.dataset && el.dataset.postNumber) {
+          position = el.dataset.postNumber;
+        }
+
+        // 增强的时间选择器
+        const timeSelectors = [
+          'time.post-time',
+          '.relative-date',
+          'time[datetime]',
+          '.post-date',
+          '[itemprop="datePublished"]'
+        ];
+
+        let timeEl = null;
+        for (const selector of timeSelectors) {
+          timeEl = el.querySelector(selector);
+          if (timeEl) break;
+        }
         const time = timeEl ? (timeEl.getAttribute('datetime') || timeEl.textContent) : '';
 
-        const likesEl = el.querySelector('meta[itemprop="userInteractionCount"]') ||
-                        el.querySelector('.post-likes');
-        const likes = likesEl ?
-                      (likesEl.getAttribute('content') || likesEl.textContent.replace(/[^\d]/g, '')) : '0';
+        // 增强的点赞选择器
+        const likesSelectors = [
+          'meta[itemprop="userInteractionCount"]',
+          '.post-likes',
+          '.like-count',
+          '.likes',
+          '[data-likes]'
+        ];
+
+        let likesEl = null;
+        for (const selector of likesSelectors) {
+          likesEl = el.querySelector(selector);
+          if (likesEl) break;
+        }
+        let likes = '0';
+        if (likesEl) {
+          likes = likesEl.getAttribute('content') ||
+                  likesEl.dataset?.likes ||
+                  likesEl.textContent.replace(/[^\d]/g, '') ||
+                  '0';
+        }
 
         if (contentHTML) {
           comments.push({

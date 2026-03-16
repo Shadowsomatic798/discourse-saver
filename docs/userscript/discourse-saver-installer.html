@@ -18,12 +18,13 @@
     .btn { display: inline-block; padding: 14px 28px; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
     .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3); }
-    .script-area { width: 100%; height: 300px; font-family: 'Monaco', 'Menlo', monospace; font-size: 12px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb; resize: vertical; }
     .changelog { font-size: 14px; color: #4b5563; }
     .changelog ul { margin-left: 20px; margin-top: 10px; }
     .changelog li { margin-bottom: 8px; }
     .footer { text-align: center; padding: 20px; background: #f9fafb; color: #6b7280; font-size: 14px; }
     .footer a { color: #4f46e5; text-decoration: none; }
+    .forum-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .forum-tag { background: #e5e7eb; padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #374151; }
   </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
     <div class="header">
       <h1>Discourse Saver</h1>
       <p>通用 Discourse 论坛内容保存工具</p>
-      <div class="version">V4.5.9</div>
+      <div class="version">V4.5.10</div>
     </div>
     <div class="content">
       <div class="section">
@@ -39,18 +40,34 @@
         <p><a class="btn btn-primary" href="https://github.com/AchengBusiness/discourse-saver/raw/main/userscript/discourse-saver.user.js">一键安装脚本</a></p>
       </div>
       <div class="section">
-        <h2>更新日志 (v4.5.9)</h2>
+        <h2>更新日志 (v4.5.10)</h2>
         <div class="changelog">
           <ul>
-            <li><strong>超级增强分类提取</strong> - 6种不同的提取方法确保分类正确识别</li>
-            <li><strong>方法1</strong>: 扩展到35+个DOM选择器</li>
-            <li><strong>方法2</strong>: 遍历topic-category容器内所有文本节点</li>
-            <li><strong>方法3</strong>: 智能查找标题区域的分类链接</li>
-            <li><strong>方法4</strong>: 从Discourse预加载JSON数据提取</li>
-            <li><strong>方法5</strong>: URL路径智能解析</li>
-            <li><strong>方法6</strong>: 带样式的span元素扫描</li>
-            <li><strong>详细调试日志</strong> - 输出每种方法的尝试结果</li>
+            <li><strong>增加 25+ 个论坛支持</strong> - 新增 GitLab、Elastic、HashiCorp、Grafana、Home Assistant 等论坛</li>
+            <li><strong>超级增强标签提取</strong> - 20+ 种标签选择器</li>
+            <li><strong>增强评论提取</strong> - 更多选择器支持不同主题的 Discourse</li>
+            <li><strong>增强论坛检测</strong> - 更多检测方法确保正确识别 Discourse</li>
+            <li><strong>详细调试日志</strong> - 方便排查问题</li>
           </ul>
+        </div>
+      </div>
+      <div class="section">
+        <h2>支持的论坛</h2>
+        <div class="forum-list">
+          <span class="forum-tag">linux.do</span>
+          <span class="forum-tag">meta.discourse.org</span>
+          <span class="forum-tag">forum.obsidian.md</span>
+          <span class="forum-tag">community.openai.com</span>
+          <span class="forum-tag">forum.cursor.com</span>
+          <span class="forum-tag">community.cloudflare.com</span>
+          <span class="forum-tag">forum.gitlab.com</span>
+          <span class="forum-tag">discuss.elastic.co</span>
+          <span class="forum-tag">discuss.hashicorp.com</span>
+          <span class="forum-tag">community.grafana.com</span>
+          <span class="forum-tag">community.home-assistant.io</span>
+          <span class="forum-tag">elixirforum.com</span>
+          <span class="forum-tag">community.bitwarden.com</span>
+          <span class="forum-tag">更多...</span>
         </div>
       </div>
       <div class="section">
@@ -62,16 +79,10 @@
             <li>用户名自动添加超链接</li>
             <li>评论折叠模式（Obsidian callout）</li>
             <li>智能字段匹配（Notion）</li>
+            <li>6种分类提取方法确保准确</li>
             <li>支持图片嵌入（Base64）</li>
           </ul>
         </div>
-      </div>
-      <div class="section">
-        <h2>脚本源码</h2>
-        <textarea class="script-area" id="scriptContent" readonly>脚本内容请从GitHub获取</textarea>
-        <p style="margin-top: 10px; color: #6b7280; font-size: 14px;">
-          完整源码请访问: <a href="https://github.com/AchengBusiness/discourse-saver" target="_blank">GitHub 仓库</a>
-        </p>
       </div>
     </div>
     <div class="footer">
