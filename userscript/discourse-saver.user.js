@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.6.0
+// @version      4.6.1
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -755,18 +755,79 @@
         }
       }
 
-      // 方法5: 从 Discourse 全局对象提取
+      // 方法5: 从 Discourse 全局对象提取（多种方式）
       if (!category) {
         try {
+          // 方式1: Discourse.Topic.current
           if (typeof window.Discourse !== 'undefined') {
-            const topic = window.Discourse?.Topic?.current || window.Discourse?.__container__?.lookup('controller:topic')?.model;
+            const topic = window.Discourse?.Topic?.current ||
+                          window.Discourse?.__container__?.lookup('controller:topic')?.model ||
+                          window.Discourse?.__container__?.lookup('route:topic')?.modelFor('topic');
             if (topic && topic.category) {
               category = topic.category.name || topic.category;
-              console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从Discourse对象)`);
+              console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从Discourse.Topic)`);
+            }
+          }
+
+          // 方式2: Ember 路由
+          if (!category && typeof window.Ember !== 'undefined') {
+            const appInstance = window.Ember?.Namespace?.NAMESPACES?.find(n => n.toString() === 'Discourse');
+            if (appInstance) {
+              const router = appInstance.__container__?.lookup('router:main');
+              const topicController = appInstance.__container__?.lookup('controller:topic');
+              if (topicController?.model?.category) {
+                category = topicController.model.category.name;
+                console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从Ember controller)`);
+              }
+            }
+          }
+
+          // 方式3: 页面上的隐藏数据
+          if (!category) {
+            const topicData = document.querySelector('[data-topic-id]');
+            if (topicData && topicData.dataset.categoryId) {
+              // 通过 category ID 查找名称
+              const categoryId = parseInt(topicData.dataset.categoryId);
+              const categoryLink = document.querySelector(`a[href*="/c/"][data-category-id="${categoryId}"]`);
+              if (categoryLink) {
+                category = extractTextWithoutIcons(categoryLink);
+                console.log(`[Discourse Saver] 方法5找到分类: "${category}" (从data-category-id)`);
+              }
             }
           }
         } catch (e) {
           console.log('[Discourse Saver] 方法5访问Discourse对象失败:', e.message);
+        }
+      }
+
+      // 方法5.5: 从页面 script 标签中的 JSON 数据提取
+      if (!category) {
+        try {
+          const scripts = document.querySelectorAll('script[type="application/json"], script:not([src])');
+          for (const script of scripts) {
+            const content = script.textContent;
+            if (content && content.includes('category') && content.includes('name')) {
+              try {
+                // 尝试解析 JSON
+                const data = JSON.parse(content);
+                if (data.category?.name) {
+                  category = data.category.name;
+                  console.log(`[Discourse Saver] 方法5.5找到分类: "${category}" (从script JSON)`);
+                  break;
+                }
+              } catch (e) {
+                // 尝试从文本中提取
+                const match = content.match(/"category":\s*\{[^}]*"name":\s*"([^"]+)"/);
+                if (match) {
+                  category = match[1];
+                  console.log(`[Discourse Saver] 方法5.5找到分类: "${category}" (从script文本匹配)`);
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.log('[Discourse Saver] 方法5.5解析script失败:', e.message);
         }
       }
 
@@ -794,7 +855,7 @@
               // 排除一些明显不是分类的文本
               if (!/^\d+$/.test(text) && !text.includes('http') && text !== '×') {
                 category = text;
-                console.log(`[Discourse Saver] 方法6找到分类: "${category}" (从带样式的span)`);
+                console.log(`[Discourse Saver] 方法7找到分类: "${category}" (从带样式的span)`);
                 break;
               }
             }
