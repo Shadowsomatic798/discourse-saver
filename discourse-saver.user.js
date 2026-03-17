@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.6.15
+// @version      4.6.16
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -1373,6 +1373,85 @@
         headingStyle: 'atx',
         codeBlockStyle: 'fenced',
         emDelimiter: '*'
+      });
+
+      // HTML 表格转 Markdown 表格
+      turndownService.addRule('tables', {
+        filter: 'table',
+        replacement: (content, node) => {
+          try {
+            const rows = node.querySelectorAll('tr');
+            if (rows.length === 0) return content;
+
+            const tableData = [];
+            let maxCols = 0;
+
+            // 收集所有行的数据
+            rows.forEach(row => {
+              const cells = row.querySelectorAll('th, td');
+              const rowData = [];
+              cells.forEach(cell => {
+                // 获取单元格文本，处理内部链接
+                let cellText = '';
+                const links = cell.querySelectorAll('a');
+                if (links.length > 0) {
+                  // 处理带链接的单元格
+                  const parts = [];
+                  cell.childNodes.forEach(child => {
+                    if (child.nodeType === Node.TEXT_NODE) {
+                      parts.push(child.textContent.trim());
+                    } else if (child.nodeName === 'A') {
+                      const linkText = child.textContent.trim();
+                      const linkHref = child.href || '';
+                      if (linkHref) {
+                        parts.push(`[${linkText}](${linkHref})`);
+                      } else {
+                        parts.push(linkText);
+                      }
+                    } else {
+                      parts.push(child.textContent.trim());
+                    }
+                  });
+                  cellText = parts.join(' ').trim();
+                } else {
+                  cellText = cell.textContent.trim();
+                }
+                // 清理单元格内容（移除换行、多余空格）
+                cellText = cellText.replace(/\s+/g, ' ').trim();
+                rowData.push(cellText);
+              });
+              if (rowData.length > maxCols) maxCols = rowData.length;
+              tableData.push(rowData);
+            });
+
+            if (tableData.length === 0 || maxCols === 0) return content;
+
+            // 构建 Markdown 表格
+            let markdown = '\n\n';
+
+            // 第一行作为表头
+            const headerRow = tableData[0];
+            while (headerRow.length < maxCols) headerRow.push('');
+            markdown += '| ' + headerRow.join(' | ') + ' |\n';
+
+            // 分隔行
+            markdown += '| ' + headerRow.map(() => '---').join(' | ') + ' |\n';
+
+            // 数据行
+            for (let i = 1; i < tableData.length; i++) {
+              const row = tableData[i];
+              while (row.length < maxCols) row.push('');
+              markdown += '| ' + row.join(' | ') + ' |\n';
+            }
+
+            markdown += '\n';
+            console.log(`[Discourse Saver] 转换表格: ${tableData.length} 行, ${maxCols} 列`);
+            return markdown;
+          } catch (e) {
+            console.warn('[Discourse Saver] 表格转换失败:', e.message);
+            return content;
+          }
+        }
       });
 
       // 保留颜色样式
@@ -3538,7 +3617,7 @@ ${tagsYaml}
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
         <div class="ds-settings-panel">
-          <h2>📝 Discourse Saver 设置 (V4.6.15)</h2>
+          <h2>📝 Discourse Saver 设置 (V4.6.16)</h2>
 
           <div class="ds-section-title">自定义站点</div>
 
