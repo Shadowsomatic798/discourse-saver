@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Discourse Saver (油猴版)
 // @namespace    https://github.com/discourse-saver
-// @version      4.6.18
+// @version      4.6.20
 // @description  通用Discourse论坛内容保存工具 - 支持Obsidian/Notion/HTML，评论、用户名超链接、折叠模式
 // @author       阿成
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=obsidian.md
@@ -1980,48 +1980,43 @@ ${tagsYaml}
       const URL_LENGTH_THRESHOLD = 32000;
       const contentTooLarge = encodedLength > URL_LENGTH_THRESHOLD;
 
-      console.log(`[Discourse Saver] Obsidian 保存: vault=${vaultName || '(当前)'}, folder=${folderPath}, file=${safeFileName}, size=${Math.round(encodedLength/1024)}KB, tooLarge=${contentTooLarge}`);
-
-      // 如果内容太大，直接使用下载方式（最可靠）
-      if (contentTooLarge) {
-        console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，使用下载方式`);
-
-        // 同时复制到剪贴板作为备选
-        try {
-          GM_setClipboard(markdown, 'text');
-        } catch (e) {
-          console.warn('[Discourse Saver] 复制到剪贴板失败:', e.message);
-        }
-
-        // 下载文件
-        downloadMarkdownFile(markdown, safeFileName, folderPath);
-
-        // 尝试打开 Obsidian（让用户手动导入或粘贴）
-        setTimeout(() => {
-          const openUrl = vaultName
-            ? `obsidian://open?vault=${encode(vaultName)}`
-            : 'obsidian://open';
-          try {
-            location.href = openUrl;
-          } catch (e) {
-            console.warn('[Discourse Saver] 打开 Obsidian 失败:', e.message);
-          }
-        }, 500);
-
-        return true;
-      }
+      console.log(`[Discourse Saver] Obsidian 保存: vault=${vaultName || '(当前)'}, folder=${folderPath}, file=${safeFileName}, size=${Math.round(encodedLength/1024)}KB, tooLarge=${contentTooLarge}, advancedUri=${config.useAdvancedUri}`);
 
       let obsidianUrl;
+
       if (config.useAdvancedUri) {
-        // Advanced URI 模式
+        // Advanced URI 模式（推荐）
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`filepath=${encode(`${folderPath}/${safeFileName}.md`)}`);
-        parts.push(`data=${encode(markdown)}`);
         parts.push(`mode=overwrite`);
+
+        if (contentTooLarge) {
+          // 大文件使用剪贴板模式
+          console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，使用 Advanced URI 剪贴板模式`);
+          GM_setClipboard(markdown, 'text');
+          parts.push(`clipboard=true`);
+          UtilModule.showNotification('内容已复制，正在通过 Advanced URI 保存...', 'info');
+        } else {
+          // 小文件直接传数据
+          parts.push(`data=${encode(markdown)}`);
+        }
         obsidianUrl = `obsidian://advanced-uri?${parts.join('&')}`;
       } else {
         // 普通 URI 模式
+        if (contentTooLarge) {
+          // 普通模式不支持剪贴板，使用下载方式
+          console.log(`[Discourse Saver] 内容过大 (${Math.round(encodedLength/1024)}KB)，普通模式使用下载方式`);
+          GM_setClipboard(markdown, 'text');
+          downloadMarkdownFile(markdown, safeFileName, folderPath);
+          // 打开 Obsidian
+          setTimeout(() => {
+            const openUrl = vaultName ? `obsidian://open?vault=${encode(vaultName)}` : 'obsidian://open';
+            try { location.href = openUrl; } catch (e) {}
+          }, 500);
+          return true;
+        }
+
         const parts = [];
         if (vaultName) parts.push(`vault=${encode(vaultName)}`);
         parts.push(`file=${encode(`${folderPath}/${safeFileName}`)}`);
@@ -2473,44 +2468,81 @@ ${tagsYaml}
       if (children.length > 100) {
         const pageId = pageData.id;
         const remainingChildren = children.slice(100);
-        console.log(`[Discourse Saver] 需要追加 ${remainingChildren.length} 个块`);
+        const totalBatches = Math.ceil(remainingChildren.length / 100);
+        console.log(`[Discourse Saver] 需要追加 ${remainingChildren.length} 个块，分 ${totalBatches} 批`);
+
+        let successBatches = 0;
+        let failedBatches = 0;
 
         // 每批最多100个块
         for (let i = 0; i < remainingChildren.length; i += 100) {
+          const batchNum = Math.floor(i/100) + 1;
           const batch = remainingChildren.slice(i, i + 100);
-          console.log(`[Discourse Saver] 追加第 ${Math.floor(i/100) + 1} 批，${batch.length} 个块`);
+          console.log(`[Discourse Saver] 追加第 ${batchNum}/${totalBatches} 批，${batch.length} 个块`);
 
-          await new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-              method: 'PATCH',
-              url: `https://api.notion.com/v1/blocks/${pageId}/children`,
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Notion-Version': NOTION_API_VERSION,
-                'Content-Type': 'application/json'
-              },
-              data: JSON.stringify({ children: batch }),
-              onload: function(response) {
-                if (response.status >= 200 && response.status < 300) {
-                  resolve();
-                } else {
-                  console.warn('[Discourse Saver] 追加块失败:', response.responseText);
-                  resolve(); // 继续处理，不中断
-                }
-              },
-              onerror: function() {
-                console.warn('[Discourse Saver] 追加块网络错误');
-                resolve(); // 继续处理
+          // 重试机制
+          let retries = 3;
+          let success = false;
+
+          while (retries > 0 && !success) {
+            try {
+              await new Promise((resolve, reject) => {
+                GM_xmlhttpRequest({
+                  method: 'PATCH',
+                  url: `https://api.notion.com/v1/blocks/${pageId}/children`,
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Notion-Version': NOTION_API_VERSION,
+                    'Content-Type': 'application/json'
+                  },
+                  data: JSON.stringify({ children: batch }),
+                  onload: function(response) {
+                    if (response.status >= 200 && response.status < 300) {
+                      success = true;
+                      resolve();
+                    } else if (response.status === 429) {
+                      // API 限流，等待后重试
+                      console.warn(`[Discourse Saver] 批次 ${batchNum} API 限流，等待重试...`);
+                      reject(new Error('rate_limited'));
+                    } else {
+                      console.warn(`[Discourse Saver] 批次 ${batchNum} 失败 (${response.status}):`, response.responseText.substring(0, 500));
+                      reject(new Error(`HTTP ${response.status}`));
+                    }
+                  },
+                  onerror: function(error) {
+                    console.warn(`[Discourse Saver] 批次 ${batchNum} 网络错误`);
+                    reject(new Error('network_error'));
+                  }
+                });
+              });
+            } catch (batchError) {
+              retries--;
+              if (retries > 0) {
+                // 等待后重试（限流情况等待更长时间）
+                const waitTime = batchError.message === 'rate_limited' ? 2000 : 500;
+                console.log(`[Discourse Saver] 批次 ${batchNum} 重试中... (剩余 ${retries} 次)`);
+                await new Promise(r => setTimeout(r, waitTime));
               }
-            });
-          });
+            }
+          }
+
+          if (success) {
+            successBatches++;
+          } else {
+            failedBatches++;
+            console.error(`[Discourse Saver] 批次 ${batchNum} 最终失败，跳过`);
+          }
 
           // 避免 API 限流，稍微延迟
           if (i + 100 < remainingChildren.length) {
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 400));
           }
         }
-        console.log('[Discourse Saver] 所有块追加完成');
+
+        console.log(`[Discourse Saver] 块追加完成: 成功 ${successBatches}/${totalBatches} 批`);
+        if (failedBatches > 0) {
+          console.warn(`[Discourse Saver] ${failedBatches} 批追加失败，部分内容可能丢失`);
+        }
       }
 
       return pageData;
@@ -3122,19 +3154,65 @@ ${tagsYaml}
         if (!Array.isArray(richText) || richText.length === 0) {
           return [{ text: { content: ' ' } }];
         }
-        return richText.map(item => {
-          if (!item || !item.text) {
-            return { text: { content: ' ' } };
+
+        const validated = [];
+        for (const item of richText) {
+          try {
+            if (!item || typeof item !== 'object') {
+              validated.push({ text: { content: ' ' } });
+              continue;
+            }
+
+            if (!item.text || typeof item.text !== 'object') {
+              validated.push({ text: { content: ' ' } });
+              continue;
+            }
+
+            // 确保 content 是字符串且不为空
+            let content = item.text.content;
+            if (content === null || content === undefined || content === '') {
+              content = ' ';
+            } else if (typeof content !== 'string') {
+              content = String(content);
+            }
+            // Notion 限制内容长度为 2000
+            content = content.substring(0, 2000);
+
+            const validItem = {
+              text: { content: content }
+            };
+
+            // 验证链接
+            if (item.text.link && item.text.link.url) {
+              try {
+                const url = item.text.link.url.trim();
+                if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                  new URL(url); // 验证 URL 格式
+                  validItem.text.link = { url: url };
+                }
+              } catch (urlError) {
+                // URL 无效，不添加链接
+              }
+            }
+
+            // 保留格式注解
+            if (item.annotations && typeof item.annotations === 'object') {
+              validItem.annotations = {};
+              if (item.annotations.bold === true) validItem.annotations.bold = true;
+              if (item.annotations.italic === true) validItem.annotations.italic = true;
+              if (item.annotations.code === true) validItem.annotations.code = true;
+              if (item.annotations.strikethrough === true) validItem.annotations.strikethrough = true;
+              if (item.annotations.underline === true) validItem.annotations.underline = true;
+            }
+
+            validated.push(validItem);
+          } catch (itemError) {
+            console.warn('[Discourse Saver] rich_text 项验证失败:', itemError.message);
+            validated.push({ text: { content: ' ' } });
           }
-          if (item.text.content === null || item.text.content === undefined) {
-            item.text.content = ' ';
-          }
-          // 确保链接URL有效
-          if (item.text.link && !item.text.link.url) {
-            delete item.text.link;
-          }
-          return item;
-        });
+        }
+
+        return validated.length > 0 ? validated : [{ text: { content: ' ' } }];
       }
 
       // 过滤并验证所有块，确保每个块都有效
@@ -3806,7 +3884,7 @@ ${tagsYaml}
       overlay.className = 'ds-settings-overlay';
       overlay.innerHTML = `
         <div class="ds-settings-panel">
-          <h2>📝 Discourse Saver 设置 (V4.6.18)</h2>
+          <h2>📝 Discourse Saver 设置 (V4.6.20)</h2>
 
           <div class="ds-section-title">自定义站点</div>
 
